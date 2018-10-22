@@ -182,7 +182,7 @@ public final class GUI extends JFrame implements ActionListener {
     private JPanel createCentralBottomSubpanel() {
         JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
-        Object[] nullPointerWorkAround = {"*", "*", "*", "*"};
+        Object[] nullPointerWorkAround = {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"};
 
         Object[][] data = {
                 {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
@@ -199,7 +199,7 @@ public final class GUI extends JFrame implements ActionListener {
         };
 
         JLabel payoffLabel = new JLabel("Payoff matrix");
-        JTable payoffTable = new JTable(mainAgent.gameMatrix, nullPointerWorkAround);
+        JTable payoffTable = new JTable(data, nullPointerWorkAround);
         payoffTable.setTableHeader(null);
         payoffTable.setEnabled(false);
         
