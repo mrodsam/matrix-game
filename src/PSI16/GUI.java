@@ -1,5 +1,8 @@
 package PSI16;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,321 +12,323 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class GUI extends JFrame implements ActionListener {
-    JLabel leftPanelRoundsLabel;
-    JLabel leftPanelExtraInformation;
-    JList<String> list;
-    private MainAgent mainAgent;
-    private JPanel rightPanel;
-    private JTextArea rightPanelLoggingTextArea;
-    private LoggingOutputStream loggingOutputStream;
+	JLabel leftPanelRoundsLabel;
+	JLabel leftPanelExtraInformation;
+	JList<String> playersList;
+	private MainAgent mainAgent;
+	private JPanel rightPanel;
+	private JTextArea rightPanelLoggingTextArea;
+	private LoggingOutputStream loggingOutputStream;
 
-    public GUI() {
-        initUI();
-    }
+	public GUI() {
+		initUI();
+	}
 
-    public GUI(MainAgent agent) {
-        mainAgent = agent;
-        initUI();
-        loggingOutputStream = new LoggingOutputStream(rightPanelLoggingTextArea);
-    }
+	public GUI(MainAgent agent) {
+		mainAgent = agent;
+		initUI();
+		loggingOutputStream = new LoggingOutputStream(rightPanelLoggingTextArea);
+	}
 
-    public void log(String s) {
-        Runnable appendLine = () -> {
-            rightPanelLoggingTextArea.append('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + s);
-            rightPanelLoggingTextArea.setCaretPosition(rightPanelLoggingTextArea.getDocument().getLength());
-        };
-        SwingUtilities.invokeLater(appendLine);
-    }
+	public void log(String s) {
+		Runnable appendLine = () -> {
+			rightPanelLoggingTextArea
+					.append('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + s);
+			rightPanelLoggingTextArea.setCaretPosition(rightPanelLoggingTextArea.getDocument().getLength());
+		};
+		SwingUtilities.invokeLater(appendLine);
+	}
 
-    public OutputStream getLoggingOutputStream() {
-        return loggingOutputStream;
-    }
+	public OutputStream getLoggingOutputStream() {
+		return loggingOutputStream;
+	}
 
-    public void logLine(String s) {
-        log(s + "\n");
-    }
+	public void logLine(String s) {
+		log(s + "\n");
+	}
 
-    public void setPlayersUI(String[] players) {
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        for (String s : players) {
-            listModel.addElement(s);
-        }
-        list.setModel(listModel);
-    }
+	public void setPlayersUI(String[] players) {
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		for (String s : players) {
+			listModel.addElement(s);
+		}
+		playersList.setModel(listModel);
+	}
 
-    public void initUI() {
-        setTitle("GUI");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setMinimumSize(new Dimension(600, 400));
-        setPreferredSize(new Dimension(1000, 600));
-        setJMenuBar(createMainMenuBar());
-        setContentPane(createMainContentPane());
-        pack();
-        setVisible(true);
-    }
+	public void initUI() {
+		setTitle("GUI");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setMinimumSize(new Dimension(600, 400));
+		setPreferredSize(new Dimension(1000, 600));
+		setJMenuBar(createMainMenuBar());
+		setContentPane(createMainContentPane());
+		pack();
+		setVisible(true);
+	}
 
-    private Container createMainContentPane() {
-        JPanel pane = new JPanel(new GridBagLayout());
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.FIRST_LINE_START;
-        gc.gridy = 0;
-        gc.weightx = 0.5;
-        gc.weighty = 0.5;
+	private Container createMainContentPane() {
+		JPanel pane = new JPanel(new GridBagLayout());
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.fill = GridBagConstraints.BOTH;
+		gc.anchor = GridBagConstraints.FIRST_LINE_START;
+		gc.gridy = 0;
+		gc.weightx = 0.5;
+		gc.weighty = 0.5;
 
-        //LEFT PANEL
-        gc.gridx = 0;
-        gc.weightx = 1;
-        pane.add(createLeftPanel(), gc);
+		// LEFT PANEL
+		gc.gridx = 0;
+		gc.weightx = 1;
+		pane.add(createLeftPanel(), gc);
 
-        //CENTRAL PANEL
-        gc.gridx = 1;
-        gc.weightx = 8;
-        pane.add(createCentralPanel(), gc);
+		// CENTRAL PANEL
+		gc.gridx = 1;
+		gc.weightx = 8;
+		pane.add(createCentralPanel(), gc);
 
-        //RIGHT PANEL
-        gc.gridx = 2;
-        gc.weightx = 8;
-        pane.add(createRightPanel(), gc);
-        return pane;
-    }
+		// RIGHT PANEL
+		gc.gridx = 2;
+		gc.weightx = 8;
+		pane.add(createRightPanel(), gc);
+		return pane;
+	}
 
-    private JPanel createLeftPanel() {
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new GridBagLayout());
-        GridBagConstraints gc = new GridBagConstraints();
+	private JPanel createLeftPanel() {
+		JPanel leftPanel = new JPanel();
+		leftPanel.setLayout(new GridBagLayout());
+		GridBagConstraints gc = new GridBagConstraints();
 
-        leftPanelRoundsLabel = new JLabel("Round 0 / null");
-        JButton leftPanelNewButton = new JButton("New");
-        leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
-        JButton leftPanelStopButton = new JButton("Stop");
-        leftPanelStopButton.addActionListener(this);
-        JButton leftPanelContinueButton = new JButton("Continue");
-        leftPanelContinueButton.addActionListener(this);
+		leftPanelRoundsLabel = new JLabel("Round 0 / null");
+		JButton leftPanelNewButton = new JButton("New");
+		leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
+//        JButton leftPanelStopButton = new JButton("Stop");
+//        leftPanelStopButton.addActionListener(this);
+//        JButton leftPanelContinueButton = new JButton("Continue");
+//        leftPanelContinueButton.addActionListener(this);
 
-        leftPanelExtraInformation = new JLabel("Parameters - NSRIP");
+		leftPanelExtraInformation = new JLabel("Parameters - ");
 
-        gc.fill = GridBagConstraints.HORIZONTAL;
-        gc.anchor = GridBagConstraints.FIRST_LINE_START;
-        gc.gridx = 0;
-        gc.weightx = 0.5;
-        gc.weighty = 0.5;
+		gc.fill = GridBagConstraints.HORIZONTAL;
+		gc.anchor = GridBagConstraints.FIRST_LINE_START;
+		gc.gridx = 0;
+		gc.weightx = 0.5;
+		gc.weighty = 0.5;
 
-        gc.gridy = 0;
-        leftPanel.add(leftPanelRoundsLabel, gc);
-        gc.gridy = 1;
-        leftPanel.add(leftPanelNewButton, gc);
-        gc.gridy = 2;
-        leftPanel.add(leftPanelStopButton, gc);
-        gc.gridy = 3;
-        leftPanel.add(leftPanelContinueButton, gc);
-        gc.gridy = 4;
-        gc.weighty = 10;
-        leftPanel.add(leftPanelExtraInformation, gc);
+		gc.gridy = 0;
+		leftPanel.add(leftPanelRoundsLabel, gc);
+		gc.gridy = 1;
+		leftPanel.add(leftPanelNewButton, gc);
+		gc.gridy = 2;
+		// leftPanel.add(leftPanelStopButton, gc);
+		gc.gridy = 3;
+		// leftPanel.add(leftPanelContinueButton, gc);
+		gc.gridy = 4;
+		gc.weighty = 10;
+		leftPanel.add(leftPanelExtraInformation, gc);
 
-        return leftPanel;
-    }
+		return leftPanel;
+	}
 
-    private JPanel createCentralPanel() {
-        JPanel centralPanel = new JPanel(new GridBagLayout());
+	private JPanel createCentralPanel() {
+		JPanel centralPanel = new JPanel(new GridBagLayout());
 
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.weightx = 0.5;
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.weightx = 0.5;
 
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.FIRST_LINE_START;
-        gc.gridx = 0;
+		gc.fill = GridBagConstraints.BOTH;
+		gc.anchor = GridBagConstraints.FIRST_LINE_START;
+		gc.gridx = 0;
 
-        gc.gridy = 0;
-        gc.weighty = 1;
-        centralPanel.add(createCentralTopSubpanel(), gc);
-        gc.gridy = 1;
-        gc.weighty = 4;
-        centralPanel.add(createCentralBottomSubpanel(), gc);
+		gc.gridy = 0;
+		gc.weighty = 1;
+		centralPanel.add(createCentralTopSubpanel(), gc);
+		gc.gridy = 1;
+		gc.weighty = 4;
+		centralPanel.add(createCentralBottomSubpanel(), gc);
 
-        return centralPanel;
-    }
+		return centralPanel;
+	}
 
-    private JPanel createCentralTopSubpanel() {
-        JPanel centralTopSubpanel = new JPanel(new GridBagLayout());
+	private JPanel createCentralTopSubpanel() {
+		JPanel centralTopSubpanel = new JPanel(new GridBagLayout());
 
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        listModel.addElement("Empty");
-        list = new JList<>(listModel);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setSelectedIndex(0);
-        list.setVisibleRowCount(5);
-        JScrollPane listScrollPane = new JScrollPane(list);
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		listModel.addElement("Empty");
+		playersList = new JList<>(listModel);
+		playersList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		playersList.setSelectedIndex(0);
+		playersList.setVisibleRowCount(5);
+		JScrollPane listScrollPane = new JScrollPane(playersList);
 
-        JLabel info1 = new JLabel("Selected player info");
-        JButton updatePlayersButton = new JButton("Update players");
-        updatePlayersButton.addActionListener(actionEvent -> mainAgent.findPlayers());
+		JLabel info1 = new JLabel("Selected player info");
+		JButton updatePlayersButton = new JButton("Update players");
+		updatePlayersButton.addActionListener(actionEvent -> mainAgent.findPlayers());
 
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.weightx = 0.5;
-        gc.weighty = 0.5;
-        gc.anchor = GridBagConstraints.CENTER;
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.weightx = 0.5;
+		gc.weighty = 0.5;
+		gc.anchor = GridBagConstraints.CENTER;
 
-        gc.gridx = 0;
-        gc.gridy = 0;
-        gc.gridheight = 666;
-        gc.fill = GridBagConstraints.BOTH;
-        centralTopSubpanel.add(listScrollPane, gc);
-        gc.gridx = 1;
-        gc.gridheight = 1;
-        gc.fill = GridBagConstraints.NONE;
-        centralTopSubpanel.add(info1, gc);
-        gc.gridy = 1;
-        centralTopSubpanel.add(updatePlayersButton, gc);
+		gc.gridx = 0;
+		gc.gridy = 0;
+		gc.gridheight = 666;
+		gc.fill = GridBagConstraints.BOTH;
+		centralTopSubpanel.add(listScrollPane, gc);
+		gc.gridx = 1;
+		gc.gridheight = 1;
+		gc.fill = GridBagConstraints.NONE;
+		centralTopSubpanel.add(info1, gc);
+		gc.gridy = 1;
+		centralTopSubpanel.add(updatePlayersButton, gc);
 
-        return centralTopSubpanel;
-    }
+		return centralTopSubpanel;
+	}
 
-    private JPanel createCentralBottomSubpanel() {
-        JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
+	private JPanel createCentralBottomSubpanel() {
+		JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
-        Object[] nullPointerWorkAround = {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"};
+		Object[] nullPointerWorkAround = { "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" };
 
-        Object[][] data = {
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"},
-                {"*", "*", "*", "*", "*", "*", "*", "*", "*", "*"}
-        };
+		Object[][] data = { { "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
+				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" } };
 
-        JLabel payoffLabel = new JLabel("Payoff matrix");
-        JTable payoffTable = new JTable(data, nullPointerWorkAround);
-        payoffTable.setTableHeader(null);
-        payoffTable.setEnabled(false);
-        
-        JScrollPane player1ScrollPane = new JScrollPane(payoffTable);
+		JLabel payoffLabel = new JLabel("Payoff matrix");
+		JTable payoffTable = new JTable(data, nullPointerWorkAround);
+		payoffTable.setTableHeader(null);
+		payoffTable.setEnabled(false);
 
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.weightx = 0.5;
-        gc.fill = GridBagConstraints.BOTH;
-        gc.anchor = GridBagConstraints.FIRST_LINE_START;
+		JScrollPane player1ScrollPane = new JScrollPane(payoffTable);
 
-        gc.gridx = 0;
-        gc.gridy = 0;
-        gc.weighty = 0.5;
-        centralBottomSubpanel.add(payoffLabel, gc);
-        gc.gridy = 1;
-        gc.gridx = 0;
-        gc.weighty = 2;
-        centralBottomSubpanel.add(player1ScrollPane, gc);
+		GridBagConstraints gc = new GridBagConstraints();
+		gc.weightx = 0.5;
+		gc.fill = GridBagConstraints.BOTH;
+		gc.anchor = GridBagConstraints.FIRST_LINE_START;
 
-        return centralBottomSubpanel;
-    }
+		gc.gridx = 0;
+		gc.gridy = 0;
+		gc.weighty = 0.5;
+		centralBottomSubpanel.add(payoffLabel, gc);
+		gc.gridy = 1;
+		gc.gridx = 0;
+		gc.weighty = 2;
+		centralBottomSubpanel.add(player1ScrollPane, gc);
 
-    private JPanel createRightPanel() {
-        rightPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.FIRST_LINE_START;
-        c.weighty = 1d;
-        c.weightx = 1d;
+		return centralBottomSubpanel;
+	}
 
-        rightPanelLoggingTextArea = new JTextArea("");
-        rightPanelLoggingTextArea.setEditable(false);
-        JScrollPane jScrollPane = new JScrollPane(rightPanelLoggingTextArea);
-        rightPanel.add(jScrollPane, c);
-        return rightPanel;
-    }
+	private JPanel createRightPanel() {
+		rightPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.fill = GridBagConstraints.BOTH;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.weighty = 1d;
+		c.weightx = 1d;
 
-    private JMenuBar createMainMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
+		rightPanelLoggingTextArea = new JTextArea("");
+		rightPanelLoggingTextArea.setEditable(false);
+		JScrollPane jScrollPane = new JScrollPane(rightPanelLoggingTextArea);
+		rightPanel.add(jScrollPane, c);
+		return rightPanel;
+	}
 
-        JMenu menuFile = new JMenu("File");
-        JMenuItem exitFileMenu = new JMenuItem("Exit");
-        exitFileMenu.setToolTipText("Exit application");
-        exitFileMenu.addActionListener(this);
+	private JMenuBar createMainMenuBar() {
+		JMenuBar menuBar = new JMenuBar();
 
-        JMenuItem newGameFileMenu = new JMenuItem("New Game");
-        newGameFileMenu.setToolTipText("Start a new game");
-        newGameFileMenu.addActionListener(this);
+		JMenu menuFile = new JMenu("File");
+		JMenuItem exitFileMenu = new JMenuItem("Exit");
+		exitFileMenu.setToolTipText("Exit application");
+		exitFileMenu.addActionListener(this);
 
-        menuFile.add(newGameFileMenu);
-        menuFile.add(exitFileMenu);
-        menuBar.add(menuFile);
+		JMenuItem newGameFileMenu = new JMenuItem("New Game");
+		newGameFileMenu.setToolTipText("Start a new game");
+		newGameFileMenu.addActionListener(this);
 
-        JMenu menuEdit = new JMenu("Edit");
-        JMenuItem resetPlayerEditMenu = new JMenuItem("Reset Players");
-        resetPlayerEditMenu.setToolTipText("Reset all player");
-        resetPlayerEditMenu.setActionCommand("reset_players");
-        resetPlayerEditMenu.addActionListener(this);
+		menuFile.add(newGameFileMenu);
+		menuFile.add(exitFileMenu);
+		menuBar.add(menuFile);
 
-        JMenuItem parametersEditMenu = new JMenuItem("Parameters");
-        parametersEditMenu.setToolTipText("Modify the parameters of the game");
-        parametersEditMenu.addActionListener(actionEvent -> logLine("Parameters: " + JOptionPane.showInputDialog(new Frame("Configure parameters"), "Enter parameters N,S,R,I,P")));
+		JMenu menuEdit = new JMenu("Edit");
+		JMenuItem resetPlayerEditMenu = new JMenuItem("Reset Players");
+		resetPlayerEditMenu.setToolTipText("Reset all player");
+		resetPlayerEditMenu.setActionCommand("reset_players");
+		resetPlayerEditMenu.addActionListener(this);
 
-        menuEdit.add(resetPlayerEditMenu);
-        menuEdit.add(parametersEditMenu);
-        menuBar.add(menuEdit);
+		JMenuItem parametersEditMenu = new JMenuItem("Parameters");
+		parametersEditMenu.setToolTipText("Modify the parameters of the game");
+		parametersEditMenu.addActionListener(actionEvent -> logLine("Parameters: "
+				+ JOptionPane.showInputDialog(new Frame("Configure parameters"), "Enter parameters N,S,R,I,P")));
 
-        JMenu menuRun = new JMenu("Run");
+		menuEdit.add(resetPlayerEditMenu);
+		menuEdit.add(parametersEditMenu);
+		menuBar.add(menuEdit);
 
-        JMenuItem newRunMenu = new JMenuItem("New");
-        newRunMenu.setToolTipText("Starts a new series of games");
-        newRunMenu.addActionListener(this);
+		JMenu menuRun = new JMenu("Run");
 
-        JMenuItem stopRunMenu = new JMenuItem("Stop");
-        stopRunMenu.setToolTipText("Stops the execution of the current round");
-        stopRunMenu.addActionListener(this);
+		JMenuItem newRunMenu = new JMenuItem("New");
+		newRunMenu.setToolTipText("Starts a new series of games");
+		newRunMenu.addActionListener(this);
 
-        JMenuItem continueRunMenu = new JMenuItem("Continue");
-        continueRunMenu.setToolTipText("Resume the execution");
-        continueRunMenu.addActionListener(this);
+		JMenuItem stopRunMenu = new JMenuItem("Stop");
+		stopRunMenu.setToolTipText("Stops the execution of the current round");
+		stopRunMenu.addActionListener(this);
 
-        JMenuItem roundNumberRunMenu = new JMenuItem("Number Of rounds");
-        roundNumberRunMenu.setToolTipText("Change the number of rounds");
-        roundNumberRunMenu.addActionListener(actionEvent -> logLine(JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?") + " rounds"));
+		JMenuItem continueRunMenu = new JMenuItem("Continue");
+		continueRunMenu.setToolTipText("Resume the execution");
+		continueRunMenu.addActionListener(this);
 
-        menuRun.add(newRunMenu);
-        menuRun.add(stopRunMenu);
-        menuRun.add(continueRunMenu);
-        menuRun.add(roundNumberRunMenu);
-        menuBar.add(menuRun);
+		JMenuItem roundNumberRunMenu = new JMenuItem("Number Of rounds");
+		roundNumberRunMenu.setToolTipText("Change the number of rounds");
+		roundNumberRunMenu.addActionListener(actionEvent -> logLine(
+				JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?") + " rounds"));
 
-        JMenu menuWindow = new JMenu("Window");
+		menuRun.add(newRunMenu);
+		menuRun.add(stopRunMenu);
+		menuRun.add(continueRunMenu);
+		menuRun.add(roundNumberRunMenu);
+		menuBar.add(menuRun);
 
-        JCheckBoxMenuItem toggleVerboseWindowMenu = new JCheckBoxMenuItem("Verbose", true);
-        toggleVerboseWindowMenu.addActionListener(actionEvent -> rightPanel.setVisible(toggleVerboseWindowMenu.getState()));
+		JMenu menuWindow = new JMenu("Window");
 
-        menuWindow.add(toggleVerboseWindowMenu);
-        menuBar.add(menuWindow);
+		JCheckBoxMenuItem toggleVerboseWindowMenu = new JCheckBoxMenuItem("Verbose", true);
+		toggleVerboseWindowMenu
+				.addActionListener(actionEvent -> rightPanel.setVisible(toggleVerboseWindowMenu.getState()));
 
-        return menuBar;
-    }
+		menuWindow.add(toggleVerboseWindowMenu);
+		menuBar.add(menuWindow);
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() instanceof JButton) {
-            JButton button = (JButton) e.getSource();
-            logLine("Button " + button.getText());
-        } else if (e.getSource() instanceof JMenuItem) {
-            JMenuItem menuItem = (JMenuItem) e.getSource();
-            logLine("Menu " + menuItem.getText());
-        }
-    }
+		return menuBar;
+	}
 
-    public class LoggingOutputStream extends OutputStream {
-        private JTextArea textArea;
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() instanceof JButton) {
+			JButton button = (JButton) e.getSource();
+			logLine("Button " + button.getText());
+		} else if (e.getSource() instanceof JMenuItem) {
+			JMenuItem menuItem = (JMenuItem) e.getSource();
+			logLine("Menu " + menuItem.getText());
+		}
+	}
 
-        public LoggingOutputStream(JTextArea jTextArea) {
-            textArea = jTextArea;
-        }
+	public class LoggingOutputStream extends OutputStream {
+		private JTextArea textArea;
 
-        @Override
-        public void write(int i) throws IOException {
-            textArea.append(String.valueOf((char) i));
-            textArea.setCaretPosition(textArea.getDocument().getLength());
-        }
-    }
+		public LoggingOutputStream(JTextArea jTextArea) {
+			textArea = jTextArea;
+		}
+
+		@Override
+		public void write(int i) throws IOException {
+			textArea.append(String.valueOf((char) i));
+			textArea.setCaretPosition(textArea.getDocument().getLength());
+		}
+	}
 }
