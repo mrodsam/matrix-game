@@ -1,9 +1,10 @@
 package PSI16;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-
-import java.awt.*;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -11,14 +12,34 @@ import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+
 public final class GUI extends JFrame implements ActionListener {
 	JLabel leftPanelRoundsLabel;
 	JLabel leftPanelExtraInformation;
 	JList<String> playersList;
+	JTable payoffTable;
 	private MainAgent mainAgent;
 	private JPanel rightPanel;
 	private JTextArea rightPanelLoggingTextArea;
 	private LoggingOutputStream loggingOutputStream;
+
+	Object[][] data;
 
 	public GUI() {
 		initUI();
@@ -97,13 +118,19 @@ public final class GUI extends JFrame implements ActionListener {
 		leftPanel.setLayout(new GridBagLayout());
 		GridBagConstraints gc = new GridBagConstraints();
 
-		leftPanelRoundsLabel = new JLabel("Round 0 / null");
+		leftPanelRoundsLabel = new JLabel("Match 0 - Round 0 / " + mainAgent.rounds);
 		JButton leftPanelNewButton = new JButton("New");
 		leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
-//        JButton leftPanelStopButton = new JButton("Stop");
-//        leftPanelStopButton.addActionListener(this);
-//        JButton leftPanelContinueButton = new JButton("Continue");
-//        leftPanelContinueButton.addActionListener(this);
+		/**
+		 * ESTO HAY QUE VER COMO FUNCIONA, PORQUE REINICIA LAS RONDAS Y FIJO QUE ESTÁ
+		 * SUMANDO MAL EL RANKING
+		 **/
+		/****************************************************************************/
+		JButton leftPanelStopButton = new JButton("Stop");
+		leftPanelStopButton.addActionListener(actionEvent -> mainAgent.doSuspend());
+		JButton leftPanelContinueButton = new JButton("Continue");
+		leftPanelContinueButton.addActionListener(actionEvent -> mainAgent.doActivate());
+		/****************************************************************************/
 
 		leftPanelExtraInformation = new JLabel("Parameters - ");
 
@@ -118,9 +145,9 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.gridy = 1;
 		leftPanel.add(leftPanelNewButton, gc);
 		gc.gridy = 2;
-		// leftPanel.add(leftPanelStopButton, gc);
+		leftPanel.add(leftPanelStopButton, gc);
 		gc.gridy = 3;
-		// leftPanel.add(leftPanelContinueButton, gc);
+		leftPanel.add(leftPanelContinueButton, gc);
 		gc.gridy = 4;
 		gc.weighty = 10;
 		leftPanel.add(leftPanelExtraInformation, gc);
@@ -144,7 +171,6 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.gridy = 1;
 		gc.weighty = 4;
 		centralPanel.add(createCentralBottomSubpanel(), gc);
-
 		return centralPanel;
 	}
 
@@ -183,23 +209,21 @@ public final class GUI extends JFrame implements ActionListener {
 		return centralTopSubpanel;
 	}
 
-	private JPanel createCentralBottomSubpanel() {
+	public JPanel createCentralBottomSubpanel() {
 		JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
 		Object[] nullPointerWorkAround = new Object[mainAgent.matrixSize];
 		for (int i = 0; i < mainAgent.matrixSize; i++) {
 			nullPointerWorkAround[i] = "*";
 		}
-		
-		Object[][] data = new Object[mainAgent.matrixSize][mainAgent.matrixSize];
-		for (int i = 0; i < mainAgent.matrixSize; i++) {
-			for (int j = 0; j < mainAgent.matrixSize; j++) {
-				data[i][j] = "*";
-			}
-		}
+
+		/************************* CALCULAR TAMAÑO ****************************/
+		data = new Object[mainAgent.matrixSize * mainAgent.numberOfMatches + mainAgent.numberOfMatches
+				+ 1][mainAgent.matrixSize];
+		/*******************************************************************/
 
 		JLabel payoffLabel = new JLabel("Payoff matrix");
-		JTable payoffTable = new JTable(data, nullPointerWorkAround);
+		payoffTable = new JTable(data, nullPointerWorkAround);
 		payoffTable.setTableHeader(null);
 		payoffTable.setEnabled(false);
 
@@ -243,26 +267,28 @@ public final class GUI extends JFrame implements ActionListener {
 		JMenu menuFile = new JMenu("File");
 		JMenuItem exitFileMenu = new JMenuItem("Exit");
 		exitFileMenu.setToolTipText("Exit application");
-		exitFileMenu.addActionListener(this);
+		exitFileMenu.addActionListener(actionEvent -> System.exit(0));
 
 		JMenuItem newGameFileMenu = new JMenuItem("New Game");
 		newGameFileMenu.setToolTipText("Start a new game");
-		newGameFileMenu.addActionListener(this);
+		newGameFileMenu.addActionListener(actionEvent -> mainAgent.newGame());
 
 		menuFile.add(newGameFileMenu);
 		menuFile.add(exitFileMenu);
 		menuBar.add(menuFile);
 
 		JMenu menuEdit = new JMenu("Edit");
+		/************************ IMPLEMENTAR ESTO ***************************/
 		JMenuItem resetPlayerEditMenu = new JMenuItem("Reset Players");
 		resetPlayerEditMenu.setToolTipText("Reset all player");
 		resetPlayerEditMenu.setActionCommand("reset_players");
 		resetPlayerEditMenu.addActionListener(this);
+		/***********************************************************/
 
 		JMenuItem parametersEditMenu = new JMenuItem("Parameters");
 		parametersEditMenu.setToolTipText("Modify the parameters of the game");
-		parametersEditMenu.addActionListener(actionEvent -> logLine("Parameters: "
-				+ JOptionPane.showInputDialog(new Frame("Configure parameters"), "Enter parameters N,S,R,I,P")));
+		parametersEditMenu.addActionListener(actionEvent -> mainAgent.setParameters(
+				JOptionPane.showInputDialog(new Frame("Configure parameters"), "Enter parameters N,S,R,I,P")));
 
 		menuEdit.add(resetPlayerEditMenu);
 		menuEdit.add(parametersEditMenu);
@@ -272,20 +298,22 @@ public final class GUI extends JFrame implements ActionListener {
 
 		JMenuItem newRunMenu = new JMenuItem("New");
 		newRunMenu.setToolTipText("Starts a new series of games");
-		newRunMenu.addActionListener(this);
+		newRunMenu.addActionListener(actionEvent -> mainAgent.newGame());
 
+		/********************** IGUAL QUE LOS BOTONES **********************/
 		JMenuItem stopRunMenu = new JMenuItem("Stop");
 		stopRunMenu.setToolTipText("Stops the execution of the current round");
-		stopRunMenu.addActionListener(this);
+		stopRunMenu.addActionListener(actionEvent -> mainAgent.doSuspend());
 
 		JMenuItem continueRunMenu = new JMenuItem("Continue");
 		continueRunMenu.setToolTipText("Resume the execution");
-		continueRunMenu.addActionListener(this);
+		continueRunMenu.addActionListener(actionEvent -> mainAgent.doActivate());
+		/****************************************************************/
 
 		JMenuItem roundNumberRunMenu = new JMenuItem("Number Of rounds");
 		roundNumberRunMenu.setToolTipText("Change the number of rounds");
-		roundNumberRunMenu.addActionListener(actionEvent -> logLine(
-				JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?") + " rounds"));
+		roundNumberRunMenu.addActionListener(actionEvent -> mainAgent
+				.setRounds(JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?")));
 
 		menuRun.add(newRunMenu);
 		menuRun.add(stopRunMenu);
