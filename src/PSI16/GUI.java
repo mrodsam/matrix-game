@@ -186,19 +186,17 @@ public final class GUI extends JFrame implements ActionListener {
 	private JPanel createCentralBottomSubpanel() {
 		JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
-		Object[] nullPointerWorkAround = { "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" };
-
-		Object[][] data = { { "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" },
-				{ "*", "*", "*", "*", "*", "*", "*", "*", "*", "*" } };
+		Object[] nullPointerWorkAround = new Object[mainAgent.matrixSize];
+		for (int i = 0; i < mainAgent.matrixSize; i++) {
+			nullPointerWorkAround[i] = "*";
+		}
+		
+		Object[][] data = new Object[mainAgent.matrixSize][mainAgent.matrixSize];
+		for (int i = 0; i < mainAgent.matrixSize; i++) {
+			for (int j = 0; j < mainAgent.matrixSize; j++) {
+				data[i][j] = "*";
+			}
+		}
 
 		JLabel payoffLabel = new JLabel("Payoff matrix");
 		JTable payoffTable = new JTable(data, nullPointerWorkAround);
