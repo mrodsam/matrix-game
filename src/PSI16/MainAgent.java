@@ -29,12 +29,12 @@ public class MainAgent extends Agent {
 
 	private AID[] players;
 
-	private int totalPlayers;
-	private int matrixSize;
-	private int rounds;
-	private int roundsBeforeChange;
-	private int percentageToBeChanged;
-	private int parameters[];
+	public int totalPlayers;
+	public int matrixSize;
+	public int rounds;
+	public int roundsBeforeChange;
+	public int percentageToBeChanged;
+	public int parameters[];
 
 	private LinkedHashMap<Integer, String> playersPerMatch;
 	private int currentMatch;
