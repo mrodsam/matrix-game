@@ -260,7 +260,7 @@ public class MainAgent extends Agent {
 					myGui.logLine("Result: " + row + "," + column + "#" + gameMatrix[row][column]);
 					updateRanking(row, column);
 					playedRounds++;
-//					doWait(1000);
+					doWait(1000);
 				}
 				step = SENDENDGAMEMESSAGE;
 				break;
@@ -281,7 +281,7 @@ public class MainAgent extends Agent {
 				Set<String> keys = ranking.keySet();
 				myGui.logLine("Ranking:");
 				for (String key : keys) {
-					myGui.logLine("Player: " + key + " Score: " + ranking.get(key));
+					myGui.logLine("Player: " + key + " - " + ranking.get(key));
 				}
 				step = 5;
 				break;
@@ -357,6 +357,8 @@ public class MainAgent extends Agent {
 			}
 			ranking.put(playerBName, score);
 
+			myGui.leftPanelRankingLabel1.setText(playerAName + ": " + ranking.get(playerAName));
+			myGui.leftPanelRankingLabel2.setText(playerBName + ": " + ranking.get(playerBName));
 			myGui.logLine(playerAName + ": " + ranking.get(playerAName));
 			myGui.logLine(playerBName + ": " + ranking.get(playerBName));
 		}

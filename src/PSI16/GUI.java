@@ -32,6 +32,8 @@ import javax.swing.SwingUtilities;
 public final class GUI extends JFrame implements ActionListener {
 	JLabel leftPanelRoundsLabel;
 	JLabel leftPanelExtraInformation;
+	JLabel leftPanelRankingLabel1;
+	JLabel leftPanelRankingLabel2;
 	JList<String> playersList;
 	JTable payoffTable;
 	private MainAgent mainAgent;
@@ -133,6 +135,8 @@ public final class GUI extends JFrame implements ActionListener {
 		/****************************************************************************/
 
 		leftPanelExtraInformation = new JLabel("Parameters - ");
+		leftPanelRankingLabel1 = new JLabel(" - ");
+		leftPanelRankingLabel2 = new JLabel(" - ");
 
 		gc.fill = GridBagConstraints.HORIZONTAL;
 		gc.anchor = GridBagConstraints.FIRST_LINE_START;
@@ -140,8 +144,7 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.weightx = 0.5;
 		gc.weighty = 0.5;
 
-		gc.gridy = 0;
-		leftPanel.add(leftPanelRoundsLabel, gc);
+		
 		gc.gridy = 1;
 		leftPanel.add(leftPanelNewButton, gc);
 		gc.gridy = 2;
@@ -149,8 +152,14 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.gridy = 3;
 		leftPanel.add(leftPanelContinueButton, gc);
 		gc.gridy = 4;
-		gc.weighty = 10;
 		leftPanel.add(leftPanelExtraInformation, gc);
+		gc.gridy = 5;
+		leftPanel.add(leftPanelRoundsLabel, gc);
+		gc.gridy = 6;
+		leftPanel.add(leftPanelRankingLabel1, gc);
+		gc.gridy = 7;
+		gc.weighty = 10;
+		leftPanel.add(leftPanelRankingLabel2, gc);
 
 		return leftPanel;
 	}
