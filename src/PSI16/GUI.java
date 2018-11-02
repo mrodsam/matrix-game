@@ -1,5 +1,6 @@
 package PSI16;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -11,6 +12,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -35,6 +39,7 @@ public final class GUI extends JFrame implements ActionListener {
 	JLabel leftPanelRankingLabel1;
 	JLabel leftPanelRankingLabel2;
 	JList<String> playersList;
+	JList<String> rankingList;
 	JTable payoffTable;
 	private MainAgent mainAgent;
 	private JPanel rightPanel;
@@ -76,6 +81,16 @@ public final class GUI extends JFrame implements ActionListener {
 			listModel.addElement(s);
 		}
 		playersList.setModel(listModel);
+	}
+
+	public void setRankingUI(LinkedHashMap<String, Integer> ranking) {
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		for (Map.Entry<String, Integer> entry : ranking.entrySet()) {
+			String key = entry.getKey();
+			Integer value = entry.getValue();
+			listModel.addElement(key + " - " + value);
+		}
+		rankingList.setModel(listModel);
 	}
 
 	public void initUI() {
@@ -135,8 +150,16 @@ public final class GUI extends JFrame implements ActionListener {
 		/****************************************************************************/
 
 		leftPanelExtraInformation = new JLabel("Parameters - ");
-		leftPanelRankingLabel1 = new JLabel(" - ");
-		leftPanelRankingLabel2 = new JLabel(" - ");
+		leftPanelRankingLabel1 = new JLabel("PlayerA - Payoffs");
+		leftPanelRankingLabel2 = new JLabel("PlayerB - Payoffs");
+
+		DefaultListModel<String> listModel = new DefaultListModel<>();
+		listModel.addElement("Ranking");
+		rankingList = new JList<>(listModel);
+		rankingList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		rankingList.setSelectedIndex(0);
+		rankingList.setVisibleRowCount(5);
+		JScrollPane listScrollPane = new JScrollPane(rankingList);
 
 		gc.fill = GridBagConstraints.HORIZONTAL;
 		gc.anchor = GridBagConstraints.FIRST_LINE_START;
@@ -144,7 +167,6 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.weightx = 0.5;
 		gc.weighty = 0.5;
 
-		
 		gc.gridy = 1;
 		leftPanel.add(leftPanelNewButton, gc);
 		gc.gridy = 2;
@@ -158,8 +180,10 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.gridy = 6;
 		leftPanel.add(leftPanelRankingLabel1, gc);
 		gc.gridy = 7;
-		gc.weighty = 10;
 		leftPanel.add(leftPanelRankingLabel2, gc);
+		gc.gridy = 8;
+		gc.weighty = 10;
+		leftPanel.add(listScrollPane, gc);
 
 		return leftPanel;
 	}

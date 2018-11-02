@@ -41,7 +41,7 @@ public class MainAgent extends Agent {
 
 	public String gameMatrix[][];
 
-	private LinkedHashMap<String, Integer> ranking;
+	public LinkedHashMap<String, Integer> ranking;
 
 	protected void setup() {
 
@@ -361,6 +361,8 @@ public class MainAgent extends Agent {
 			myGui.leftPanelRankingLabel2.setText(playerBName + ": " + ranking.get(playerBName));
 			myGui.logLine(playerAName + ": " + ranking.get(playerAName));
 			myGui.logLine(playerBName + ": " + ranking.get(playerBName));
+			
+			myGui.setRankingUI(ranking);
 		}
 
 		public boolean done() {
