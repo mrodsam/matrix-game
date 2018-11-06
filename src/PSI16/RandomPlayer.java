@@ -33,7 +33,6 @@ public class RandomPlayer extends Agent {
 		}
 
 		addBehaviour(new Game());
-		System.out.println("RandomAgent " + getAID().getName() + " is ready.");
 
 	}
 
