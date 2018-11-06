@@ -25,9 +25,6 @@ public class MainAgent extends Agent {
 	private AID[] players;
 	public GameParameters parameters = new GameParameters();
 
-	private LinkedHashMap<Integer, String> playersPerMatch = new LinkedHashMap<>();
-	private int currentMatch;
-
 	private String gameMatrix[][];
 	private LinkedHashMap<String, Integer> ranking = new LinkedHashMap<>();
 
@@ -106,6 +103,8 @@ public class MainAgent extends Agent {
 		int playerA;
 		int playerB;
 		boolean end = false;
+		int currentMatch;
+		LinkedHashMap<Integer, String> playersPerMatch = new LinkedHashMap<>();
 
 		public void action() {
 			switch (state) {
@@ -245,7 +244,6 @@ public class MainAgent extends Agent {
 				if (i != j) {
 					gameMatrix[j][i] = b + "," + a;
 				}
-
 			}
 		}
 		updateTable();
@@ -257,7 +255,6 @@ public class MainAgent extends Agent {
 				myGui.data[i][j] = gameMatrix[i][j];
 			}
 		}
-
 		myGui.payoffTable.repaint();
 	}
 
