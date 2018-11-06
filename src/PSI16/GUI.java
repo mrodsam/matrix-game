@@ -1,6 +1,5 @@
 package PSI16;
 
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -12,7 +11,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -33,6 +31,7 @@ import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
+@SuppressWarnings("serial")
 public final class GUI extends JFrame implements ActionListener {
 	JLabel leftPanelRoundsLabel;
 	JLabel leftPanelExtraInformation;
@@ -135,7 +134,7 @@ public final class GUI extends JFrame implements ActionListener {
 		leftPanel.setLayout(new GridBagLayout());
 		GridBagConstraints gc = new GridBagConstraints();
 
-		leftPanelRoundsLabel = new JLabel("Match 0 - Round 0 / " + mainAgent.rounds);
+		leftPanelRoundsLabel = new JLabel("Match 0 - Round 0 / " + mainAgent.parameters.rounds);
 		JButton leftPanelNewButton = new JButton("New");
 		leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
 		/**
@@ -245,15 +244,12 @@ public final class GUI extends JFrame implements ActionListener {
 	public JPanel createCentralBottomSubpanel() {
 		JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
-		Object[] nullPointerWorkAround = new Object[mainAgent.matrixSize];
-		for (int i = 0; i < mainAgent.matrixSize; i++) {
+		Object[] nullPointerWorkAround = new Object[mainAgent.parameters.matrixSize];
+		for (int i = 0; i < mainAgent.parameters.matrixSize; i++) {
 			nullPointerWorkAround[i] = "*";
 		}
 
-		/************************* CALCULAR TAMAÑO ****************************/
-		data = new Object[mainAgent.matrixSize * mainAgent.numberOfMatches + mainAgent.numberOfMatches
-				+ 1][mainAgent.matrixSize];
-		/*******************************************************************/
+		data = new Object[mainAgent.parameters.matrixSize][mainAgent.parameters.matrixSize];
 
 		JLabel payoffLabel = new JLabel("Payoff matrix");
 		payoffTable = new JTable(data, nullPointerWorkAround);

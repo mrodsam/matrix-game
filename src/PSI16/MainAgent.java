@@ -7,73 +7,56 @@ import java.util.Set;
 
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 
 @SuppressWarnings("serial")
 public class MainAgent extends Agent {
 
 	private GUI myGui;
 
-	private final int CALCULATEPLAYERSPERMATCH = 0;
-	private final int SENDNEWGAMEMESSAGES = 1;
-	private final int PLAY = 2;
-	private final int SENDENDGAMEMESSAGE = 3;
-	private final int END = 4;
+	private State state;
 
 	private AID[] players;
+	public GameParameters parameters = new GameParameters();
 
-	public int totalPlayers;
-	public int matrixSize;
-	public int rounds;
-	public int roundsBeforeChange;
-	public int percentageToBeChanged;
-	public int numberOfMatches;
-
-	private LinkedHashMap<Integer, String> playersPerMatch;
+	private LinkedHashMap<Integer, String> playersPerMatch = new LinkedHashMap<>();
 	private int currentMatch;
 
-	public String gameMatrix[][];
-
-	public LinkedHashMap<String, Integer> ranking;
+	private String gameMatrix[][];
+	private LinkedHashMap<String, Integer> ranking = new LinkedHashMap<>();
 
 	protected void setup() {
 
-		totalPlayers = 4;
-		matrixSize = 4;
-		rounds = 5;
-		roundsBeforeChange = 2;
-		percentageToBeChanged = 50;
-		numberOfMatches = totalPlayers * (totalPlayers - 1) / 2;
+		state = State.s0CalculatePlayersPerMatch;
 
 		myGui = new GUI(this);
 		System.setOut(new PrintStream(myGui.getLoggingOutputStream()));
-		myGui.leftPanelExtraInformation.setText("Parameters - " + totalPlayers + ", " + matrixSize + ", " + rounds
-				+ ", " + roundsBeforeChange + ", " + percentageToBeChanged);
+		myGui.leftPanelExtraInformation.setText(parameters.toString());
 
 		findPlayers();
 		myGui.logLine("Agent " + getAID().getName() + " is ready.");
-		ranking = new LinkedHashMap<>();
 	}
 
+	/* Limitar el número de jugadores al parámetro introducido */
 	protected int findPlayers() {
 		myGui.logLine("Updating player list");
+
 		DFAgentDescription template = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();
 		sd.setType("Player");
 		template.addServices(sd);
 		try {
 			DFAgentDescription[] result = DFService.search(this, template);
-			players = new AID[result.length];
 			if (result.length > 0) {
 				myGui.logLine("Found " + result.length + " players");
 			}
+			players = new AID[result.length];
 			for (int i = 0; i < players.length; i++) {
 				players[i] = result[i].getName();
 			}
@@ -82,7 +65,6 @@ public class MainAgent extends Agent {
 			myGui.log(e.getMessage());
 		}
 
-		// Provisional
 		String[] playerNames = new String[players.length];
 		for (int i = 0; i < players.length; i++) {
 			playerNames[i] = players[i].getName();
@@ -93,60 +75,19 @@ public class MainAgent extends Agent {
 
 	public int newGame() {
 		addBehaviour(new Init());
-		addBehaviour(new Play());
+		addBehaviour(new GameManager());
 		return 0;
 	}
 
-	private void createMatrix() {
-		gameMatrix = new String[matrixSize][matrixSize];
-		for (int i = 0; i < matrixSize; i++) {
-			for (int j = 0; j < matrixSize; j++) {
-				int a = (int) (Math.random() * 9);
-				int b = (int) (Math.random() * 9);
-				gameMatrix[i][j] = a + "," + b;
-				if (i != j) {
-					gameMatrix[j][i] = b + "," + a;
-				}
-
-			}
-		}
-		/*************** MOSTRAR LA MATRIZ ***********/
-//		myGui.logLine("New matrix");
-//		for (int i = 0; i < matrixSize; i++) {
-//			for (int j = 0; j < matrixSize; j++) {
-//				System.out.print(gameMatrix[i][j] + "\t");
-//			}
-//			System.out.println();
-//		}
-		/*******************************************/
-		updateTable();
-	}
-
-	private void updateTable() {
-		int offset = matrixSize * (currentMatch - 1) + (currentMatch - 1);
-		if (currentMatch == 1) {
-			offset = 0;
-		}
-		for (int i = 0, x = offset + 1; i < matrixSize + 1; i++, x++) {
-			for (int j = 0; j < matrixSize; j++) {
-				if (i == matrixSize) {
-					if (j == 0) {
-						myGui.data[x][j] = "Match " + currentMatch;
-					}
-				} else {
-					myGui.data[x][j] = gameMatrix[i][j];
-				}
-			}
-		}
-		myGui.payoffTable.repaint();
+	private enum State {
+		s0CalculatePlayersPerMatch, s1SendNewGameMessages, s2Play, s3SendEndGameMessages, s4End;
 	}
 
 	private class Init extends OneShotBehaviour {
 
 		public void action() {
-			// Id#ID#N,S,R,I,P
-			String infoContent = "#-#" + totalPlayers + "," + matrixSize + "," + rounds + "," + roundsBeforeChange + ","
-					+ percentageToBeChanged;
+			String infoContent = "Id#-#" + parameters.totalPlayers + "," + parameters.matrixSize + ","
+					+ parameters.rounds + "," + parameters.roundsBeforeChange + "," + parameters.percentageToBeChanged;
 			myGui.logLine("Information about the game: " + infoContent);
 			for (int i = 0; i < players.length; i++) {
 				infoContent = infoContent.replace("-", String.valueOf(i));
@@ -160,19 +101,18 @@ public class MainAgent extends Agent {
 		}
 	}
 
-	private class Play extends Behaviour {
+	private class GameManager extends SimpleBehaviour {
 
-		int step = CALCULATEPLAYERSPERMATCH;
 		int playerA;
 		int playerB;
+		boolean end = false;
 
 		public void action() {
-			switch (step) {
-			case CALCULATEPLAYERSPERMATCH:
+			switch (state) {
+			case s0CalculatePlayersPerMatch:
 				int match = 1;
 				LinkedList<String> combinations = new LinkedList<>();
 				boolean stop = false;
-				playersPerMatch = new LinkedHashMap<>();
 				currentMatch = 1;
 
 				for (int i = 0; i < players.length; i++) {
@@ -190,13 +130,13 @@ public class MainAgent extends Agent {
 						}
 					}
 				}
-				step = SENDNEWGAMEMESSAGES;
+				state = State.s1SendNewGameMessages;
 				break;
 
-			case SENDNEWGAMEMESSAGES:
+			case s1SendNewGameMessages:
 				myGui.logLine("Match " + currentMatch);
 				if (currentMatch > playersPerMatch.size()) {
-					step = END;
+					state = State.s4End;
 				} else {
 					playerA = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[0]);
 					playerB = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[1]);
@@ -205,15 +145,14 @@ public class MainAgent extends Agent {
 						myGui.logLine("Sending new game message to player " + i);
 						ACLMessage newGame = new ACLMessage(ACLMessage.INFORM);
 						newGame.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-						newGame.setContent("#" + playerA + "," + playerB);
-						newGame.setConversationId("new-game");
+						newGame.setContent("NewGame#" + playerA + "," + playerB);
 						myAgent.send(newGame);
 					}
 
-					step = PLAY;
+					state = State.s2Play;
 				}
 				break;
-			case PLAY:
+			case s2Play:
 				myGui.logLine("Player " + players[playerA].getLocalName() + " vs " + players[playerB].getLocalName());
 				int row = 0;
 				int column = 0;
@@ -221,26 +160,31 @@ public class MainAgent extends Agent {
 
 				createMatrix();
 
-				while (playedRounds <= rounds) {
+				while (playedRounds <= parameters.rounds) {
 					myGui.leftPanelRoundsLabel
-							.setText("Match " + currentMatch + " - Round " + playedRounds + " / " + rounds);
+							.setText("Match " + currentMatch + " - Round " + playedRounds + " / " + parameters.rounds);
 					myGui.leftPanelRoundsLabel.repaint();
-					if (playedRounds == roundsBeforeChange + 1) {
-						updateMatrix();
-						/**** Actualizar tabla UI ***/
+					if (parameters.roundsBeforeChange != 0 && playedRounds == parameters.roundsBeforeChange + 1) {
+						int percentageChanged = updateMatrix();
+						for (int i = 0; i < 2; i++) {
+							ACLMessage end = new ACLMessage(ACLMessage.INFORM);
+							end.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
+							end.setContent("Changed#" + percentageChanged);
+							myAgent.send(end);
+						}
 					}
-					/* Preguntar si esto está bien */
 					for (int i = 0; i < 2; i++) {
 						ACLMessage position = new ACLMessage(ACLMessage.REQUEST);
 						position.addReceiver(
 								players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
 						position.setContent("Position");
-						position.setConversationId("position");
 						myAgent.send(position);
 
-						MessageTemplate mt = MessageTemplate.MatchConversationId("position");
+						myGui.logLine("Main send " + position.getContent() + " to: "
+								+ players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
+
 						myGui.logLine("Main Waiting for movement");
-						ACLMessage response = myAgent.blockingReceive(mt);
+						ACLMessage response = myAgent.blockingReceive();
 						myGui.logLine("Main received " + response.getContent() + " from "
 								+ response.getSender().getLocalName());
 						if (i == 0) {
@@ -254,143 +198,187 @@ public class MainAgent extends Agent {
 						ACLMessage result = new ACLMessage(ACLMessage.INFORM);
 						result.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
 						result.setContent("Results#" + row + "," + column + "#" + gameMatrix[row][column]);
-						result.setConversationId("results");
 						myAgent.send(result);
 					}
 					myGui.logLine("Result: " + row + "," + column + "#" + gameMatrix[row][column]);
-					updateRanking(row, column);
+					updateRanking(row, column, playerA, playerB);
 					playedRounds++;
 					doWait(1000);
 				}
-				step = SENDENDGAMEMESSAGE;
+				state = State.s3SendEndGameMessages;
 				break;
 
-			case SENDENDGAMEMESSAGE:
+			case s3SendEndGameMessages:
 				for (int i = 0; i < 2; i++) {
 					ACLMessage end = new ACLMessage(ACLMessage.INFORM);
 					end.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
 					end.setContent("EndGame");
-					end.setConversationId("end-game");
 					myAgent.send(end);
 				}
 				currentMatch++;
-				step = SENDNEWGAMEMESSAGES;
+				state = State.s1SendNewGameMessages;
 				break;
-			case END:
+			case s4End:
 				myGui.logLine("End game");
 				Set<String> keys = ranking.keySet();
 				myGui.logLine("Ranking:");
 				for (String key : keys) {
 					myGui.logLine("Player: " + key + " - " + ranking.get(key));
 				}
-				step = 5;
+				end = true;
 				break;
 			}
 		}
 
-		private void updateMatrix() {
-			myGui.logLine("Update matrix");
-			int percentageChanged = 0;
-			int percentageByPosition = 100 / (matrixSize * matrixSize);
-			String matrix[][] = new String[matrixSize][matrixSize];
-
-			while (percentageChanged < percentageToBeChanged) {
-				int row = (int) (Math.random() * matrixSize);
-				int column = (int) (Math.random() * matrixSize);
-
-				int a = (int) (Math.random() * 9);
-				int b = (int) (Math.random() * 9);
-
-				if (matrix[column][row] != null || matrix[row][column] != null) {
-					continue;
-				}
-
-				gameMatrix[row][column] = a + "," + b;
-				matrix[row][column] = a + "," + b;
-
-				if (row == column) {
-					percentageChanged += percentageByPosition;
-				}
-
-				if (row != column) {
-					gameMatrix[column][row] = b + "," + a;
-					percentageChanged += 2 * percentageByPosition;
-				}
-			}
-
-			/*************************************************/
-
-			for (int i = 0; i < matrixSize; i++) {
-				for (int j = 0; j < matrixSize; j++) {
-//					System.out.print(gameMatrix[i][j] + "\t");
-				}
-//				System.out.println();
-			}
-			/*************************************************/
-			for (int i = 0; i < 2; i++) {
-				ACLMessage end = new ACLMessage(ACLMessage.INFORM);
-				end.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-				end.setContent("Changed#" + percentageChanged);
-				end.setConversationId("changed");
-				myAgent.send(end);
-			}
-			updateTable();
-		}
-
-		private void updateRanking(int row, int column) {
-			String playerAName = players[playerA].getLocalName();
-			String playerBName = players[playerB].getLocalName();
-
-			int score = 0;
-
-			if (ranking.get(playerAName) != null) {
-				score = ranking.get(playerAName) + Integer.parseInt(gameMatrix[row][column].split(",")[0]);
-			} else {
-				score = Integer.parseInt(gameMatrix[row][column].split(",")[0]);
-			}
-			ranking.put(playerAName, score);
-			score = 0;
-			if (ranking.get(playerBName) != null) {
-				score = ranking.get(playerBName) + Integer.parseInt(gameMatrix[row][column].split(",")[1]);
-			} else {
-				score = Integer.parseInt(gameMatrix[row][column].split(",")[1]);
-			}
-			ranking.put(playerBName, score);
-
-			myGui.leftPanelRankingLabel1.setText(playerAName + ": " + ranking.get(playerAName));
-			myGui.leftPanelRankingLabel2.setText(playerBName + ": " + ranking.get(playerBName));
-			myGui.logLine(playerAName + ": " + ranking.get(playerAName));
-			myGui.logLine(playerBName + ": " + ranking.get(playerBName));
-			
-			myGui.setRankingUI(ranking);
-		}
-
 		public boolean done() {
-			return step == 5;
+			return end;
 		}
 	}
 
+	private void createMatrix() {
+		gameMatrix = new String[parameters.matrixSize][parameters.matrixSize];
+		for (int i = 0; i < parameters.matrixSize; i++) {
+			for (int j = 0; j < parameters.matrixSize; j++) {
+				int a = (int) (Math.random() * 9);
+				int b = (int) (Math.random() * 9);
+				gameMatrix[i][j] = a + "," + b;
+				if (i != j) {
+					gameMatrix[j][i] = b + "," + a;
+				}
+
+			}
+		}
+		updateTable();
+	}
+
+	private void updateTable() {
+		for (int i = 0; i < parameters.matrixSize; i++) {
+			for (int j = 0; j < parameters.matrixSize; j++) {
+				myGui.data[i][j] = gameMatrix[i][j];
+			}
+		}
+
+		myGui.payoffTable.repaint();
+	}
+
+	/*************************************
+	 * ¿¿AQUÍ O EN LA UI??
+	 ***********************************************/
+
 	public void setParameters(String showInputDialog) {
 		if (showInputDialog != null) {
-			totalPlayers = Integer.parseInt(showInputDialog.split(",")[0]);
-			matrixSize = Integer.parseInt(showInputDialog.split(",")[1]);
-			rounds = Integer.parseInt(showInputDialog.split(",")[2]);
-			roundsBeforeChange = Integer.parseInt(showInputDialog.split(",")[3]);
-			percentageToBeChanged = Integer.parseInt(showInputDialog.split(",")[4]);
-			myGui.leftPanelExtraInformation.setText("Parameters - " + totalPlayers + ", " + matrixSize + ", " + rounds
-					+ ", " + roundsBeforeChange + ", " + percentageToBeChanged);
-			myGui.logLine("Parameters: " + showInputDialog);
+			parameters = new GameParameters(Integer.parseInt(showInputDialog.split(",")[0]),
+					Integer.parseInt(showInputDialog.split(",")[1]), Integer.parseInt(showInputDialog.split(",")[2]),
+					Integer.parseInt(showInputDialog.split(",")[3]), Integer.parseInt(showInputDialog.split(",")[4]));
+
+			myGui.leftPanelExtraInformation.setText(parameters.toString());
+			myGui.logLine("Parameters: " + parameters.toString());
 		}
 	}
 
 	public void setRounds(String numberOfRounds) {
 		if (numberOfRounds != null) {
-			rounds = Integer.parseInt(numberOfRounds);
-			myGui.leftPanelRoundsLabel.setText("Match 0 - Round 0 / " + rounds);
-			myGui.leftPanelExtraInformation.setText("Parameters - " + totalPlayers + ", " + matrixSize + ", " + rounds
-					+ ", " + roundsBeforeChange + ", " + percentageToBeChanged);
+			parameters.rounds = Integer.parseInt(numberOfRounds);
+			myGui.leftPanelRoundsLabel.setText("Match 0 - Round 0 / " + parameters.rounds);
+			myGui.leftPanelExtraInformation.setText(parameters.toString());
 			myGui.logLine("Rounds: " + numberOfRounds);
 		}
 
 	}
+
+	/*********************************************************************************************************/
+	private int updateMatrix() {
+		myGui.logLine("Update matrix");
+		int percentageChanged = 0;
+		int percentageByPosition = 100 / (parameters.matrixSize * parameters.matrixSize);
+		String matrix[][] = new String[parameters.matrixSize][parameters.matrixSize];
+
+		while (percentageChanged < parameters.percentageToBeChanged) {
+			int row = (int) (Math.random() * parameters.matrixSize);
+			int column = (int) (Math.random() * parameters.matrixSize);
+
+			int a = (int) (Math.random() * 9);
+			int b = (int) (Math.random() * 9);
+
+			if (matrix[column][row] != null || matrix[row][column] != null) {
+				continue;
+			}
+
+			gameMatrix[row][column] = a + "," + b;
+			matrix[row][column] = a + "," + b;
+
+			if (row == column) {
+				percentageChanged += percentageByPosition;
+			}
+
+			if (row != column) {
+				gameMatrix[column][row] = b + "," + a;
+				percentageChanged += 2 * percentageByPosition;
+			}
+		}
+		updateTable();
+		return percentageChanged;
+	}
+
+	private void updateRanking(int row, int column, int playerA, int playerB) {
+		String playerAName = players[playerA].getLocalName();
+		String playerBName = players[playerB].getLocalName();
+
+		int score = 0;
+
+		if (ranking.get(playerAName) != null) {
+			score = ranking.get(playerAName) + Integer.parseInt(gameMatrix[row][column].split(",")[0]);
+		} else {
+			score = Integer.parseInt(gameMatrix[row][column].split(",")[0]);
+		}
+		ranking.put(playerAName, score);
+		score = 0;
+		if (ranking.get(playerBName) != null) {
+			score = ranking.get(playerBName) + Integer.parseInt(gameMatrix[row][column].split(",")[1]);
+		} else {
+			score = Integer.parseInt(gameMatrix[row][column].split(",")[1]);
+		}
+		ranking.put(playerBName, score);
+
+		myGui.leftPanelRankingLabel1.setText(playerAName + ": " + ranking.get(playerAName));
+		myGui.leftPanelRankingLabel2.setText(playerBName + ": " + ranking.get(playerBName));
+		myGui.logLine(playerAName + ": " + ranking.get(playerAName));
+		myGui.logLine(playerBName + ": " + ranking.get(playerBName));
+
+		myGui.setRankingUI(ranking);
+	}
+
+	public class GameParameters {
+		int totalPlayers;
+		int matrixSize;
+		int rounds;
+		int roundsBeforeChange;
+		int percentageToBeChanged;
+
+		public GameParameters() {
+			totalPlayers = 4;
+			matrixSize = 4;
+			rounds = 5;
+			roundsBeforeChange = 0;
+			percentageToBeChanged = 0;
+		}
+
+		public GameParameters(int totalPlayers, int matrixSize, int rounds, int roundsBeforeChange,
+				int percentageToBeChanged) {
+			super();
+			this.totalPlayers = totalPlayers;
+			this.matrixSize = matrixSize;
+			this.rounds = rounds;
+			this.roundsBeforeChange = roundsBeforeChange;
+			this.percentageToBeChanged = percentageToBeChanged;
+		}
+
+		@Override
+		public String toString() {
+			return "Parameters [N=" + totalPlayers + ", S=" + matrixSize + ", R=" + rounds + ", I=" + roundsBeforeChange
+					+ ", P=" + percentageToBeChanged + "]";
+		}
+
+	}
+
 }

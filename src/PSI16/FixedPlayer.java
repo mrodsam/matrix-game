@@ -1,33 +1,30 @@
 package PSI16;
 
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 
 @SuppressWarnings("serial")
 public class FixedPlayer extends Agent {
 
-	private final int RECEIVELEAGUEINFO = 0;
-	private final int RECEIVEGAMEINFO = 1;
-	private final int SELECTPOSITION = 2;
-	private final int RECEIVEROUNDRESULTS = 3;
-
 	private int matrixSize;
+	private State state;
 	private int fixedPosition;
+	private ACLMessage msg;
 
 	protected void setup() {
+		state = State.s0ReceiveLeagueInfo;
 
 		DFAgentDescription dfad = new DFAgentDescription();
 		dfad.setName(getAID());
 
 		ServiceDescription sd = new ServiceDescription();
 		sd.setType("Player");
-		sd.setName("Matrix game");
+		sd.setName("Game");
 		dfad.addServices(sd);
 
 		try {
@@ -48,74 +45,54 @@ public class FixedPlayer extends Agent {
 		}
 	}
 
-	private class Game extends Behaviour {
-		ACLMessage info = null;
-		ACLMessage newgame = null;
-		ACLMessage positionMsg = null;
-		ACLMessage results = null;
-		ACLMessage end = null;
-		ACLMessage changed = null;
-		int step = RECEIVELEAGUEINFO;
+	private enum State {
+		s0ReceiveLeagueInfo, s1ReceiveGameInfo, s2SelectPosition, s3ReceiveRoundResult
+	}
+
+	private class Game extends CyclicBehaviour {
 
 		public void action() {
-			switch (step) {
-			case RECEIVELEAGUEINFO:
-				MessageTemplate mt = MessageTemplate.MatchConversationId("game-info");
-				info = myAgent.blockingReceive(mt);
+			msg = blockingReceive();
+			if (msg != null) {
+				switch (state) {
+				case s0ReceiveLeagueInfo:
+					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {
+						String output[] = msg.getContent().split("#")[2].split(",");
+						matrixSize = Integer.parseInt(output[1]);
+						fixedPosition = (int) (Math.random() * matrixSize);
+						state = State.s1ReceiveGameInfo;
+					}
+					break;
 
-				if (info != null) {
-					String output[] = info.getContent().split("#")[2].split(",");
-					matrixSize = Integer.parseInt(output[1]);
-					fixedPosition = (int) (Math.random() * matrixSize);
-					step = RECEIVEGAMEINFO;
+				case s1ReceiveGameInfo:
+					if (msg.getContent().startsWith("NewGame#") && msg.getPerformative() == ACLMessage.INFORM) {
+						state = State.s2SelectPosition;
+					}
+					break;
+				case s2SelectPosition:
+					if (msg.getContent().startsWith("Position") && msg.getPerformative() == ACLMessage.REQUEST) {
+						ACLMessage positionReply = msg.createReply();
+						positionReply.setPerformative(ACLMessage.INFORM);
+						positionReply.setContent("Position#" + fixedPosition);
+						myAgent.send(positionReply);
+						state = State.s3ReceiveRoundResult;
+					}
+					break;
+				case s3ReceiveRoundResult:
+					if (msg.getContent().startsWith("EndGame") && msg.getPerformative() == ACLMessage.INFORM) {
+						state = State.s1ReceiveGameInfo;
+						break;
+					}
 
-				}
-				break;
-
-			case RECEIVEGAMEINFO:
-				MessageTemplate mt1 = MessageTemplate.MatchConversationId("new-game");
-				newgame = myAgent.blockingReceive(mt1);
-				if (newgame != null) {
-					step = SELECTPOSITION;
-				}
-				break;
-			case SELECTPOSITION:
-				/******** A los jugadores tontos esto les da igual ********************/
-				MessageTemplate mt5 = MessageTemplate.MatchConversationId("changed");
-				changed = myAgent.receive(mt5);
-				if (changed != null) {
-					// TODO
-				}
-				/********************************************************************/
-				MessageTemplate mt2 = MessageTemplate.MatchConversationId("position");
-				positionMsg = myAgent.blockingReceive(mt2);
-				if (positionMsg != null) {
-					ACLMessage positionReply = positionMsg.createReply();
-					positionReply.setPerformative(ACLMessage.INFORM);
-					positionReply.setContent("Position#" + String.valueOf(fixedPosition));
-					myAgent.send(positionReply);
-					step = RECEIVEROUNDRESULTS;
-				}
-				break;
-			case RECEIVEROUNDRESULTS:
-				MessageTemplate mt4 = MessageTemplate.MatchConversationId("end-game");
-				end = myAgent.receive(mt4);
-				if (end != null) {
-					step = RECEIVEGAMEINFO;
+					if (msg.getContent().startsWith("Results#") && msg.getPerformative() == ACLMessage.INFORM) {
+						state = State.s2SelectPosition;
+					}
 					break;
 				}
-				MessageTemplate mt3 = MessageTemplate.MatchConversationId("results");
-				results = myAgent.blockingReceive(mt3);
-				if (results != null) {
-					step = SELECTPOSITION;
-				}
-				break;
 			}
 
 		}
 
-		public boolean done() {
-			return step == 4;
-		}
 	}
+
 }
