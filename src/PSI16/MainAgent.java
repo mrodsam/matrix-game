@@ -29,7 +29,6 @@ public class MainAgent extends Agent {
 	private LinkedHashMap<String, Integer> ranking = new LinkedHashMap<>();
 
 	protected void setup() {
-
 		state = State.s0CalculatePlayersPerMatch;
 
 		myGui = new GUI(this);
@@ -40,7 +39,6 @@ public class MainAgent extends Agent {
 		myGui.logLine("Agent " + getAID().getName() + " is ready.");
 	}
 
-	/* Limitar el número de jugadores al parámetro introducido */
 	protected int findPlayers() {
 		myGui.logLine("Updating player list");
 
@@ -53,7 +51,11 @@ public class MainAgent extends Agent {
 			if (result.length > 0) {
 				myGui.logLine("Found " + result.length + " players");
 			}
-			players = new AID[result.length];
+			if (result.length < parameters.totalPlayers)
+				players = new AID[result.length];
+			else
+				players = new AID[parameters.totalPlayers];
+
 			for (int i = 0; i < players.length; i++) {
 				players[i] = result[i].getName();
 			}
@@ -91,7 +93,6 @@ public class MainAgent extends Agent {
 				ACLMessage info = new ACLMessage(ACLMessage.INFORM);
 				info.addReceiver(players[i]);
 				info.setContent(infoContent);
-				info.setConversationId("game-info");
 				myAgent.send(info);
 				infoContent = infoContent.replace(String.valueOf(i), "-");
 			}
@@ -102,9 +103,9 @@ public class MainAgent extends Agent {
 
 		int playerA;
 		int playerB;
-		boolean end = false;
 		int currentMatch;
 		LinkedHashMap<Integer, String> playersPerMatch = new LinkedHashMap<>();
+		boolean end = false;
 
 		public void action() {
 			switch (state) {
@@ -151,6 +152,7 @@ public class MainAgent extends Agent {
 					state = State.s2Play;
 				}
 				break;
+
 			case s2Play:
 				myGui.logLine("Player " + players[playerA].getLocalName() + " vs " + players[playerB].getLocalName());
 				int row = 0;
@@ -179,9 +181,6 @@ public class MainAgent extends Agent {
 						position.setContent("Position");
 						myAgent.send(position);
 
-						myGui.logLine("Main send " + position.getContent() + " to: "
-								+ players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-
 						myGui.logLine("Main Waiting for movement");
 						ACLMessage response = myAgent.blockingReceive();
 						myGui.logLine("Main received " + response.getContent() + " from "
@@ -202,7 +201,7 @@ public class MainAgent extends Agent {
 					myGui.logLine("Result: " + row + "," + column + "#" + gameMatrix[row][column]);
 					updateRanking(row, column, playerA, playerB);
 					playedRounds++;
-					doWait(1000);
+//					doWait(1000);
 				}
 				state = State.s3SendEndGameMessages;
 				break;
@@ -217,6 +216,7 @@ public class MainAgent extends Agent {
 				currentMatch++;
 				state = State.s1SendNewGameMessages;
 				break;
+
 			case s4End:
 				myGui.logLine("End game");
 				Set<String> keys = ranking.keySet();
