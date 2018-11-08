@@ -25,12 +25,11 @@ public class MainAgent extends Agent {
 	private AID[] players;
 	public GameParameters parameters = new GameParameters();
 
-	private String gameMatrix[][];
+	public String gameMatrix[][];
 	private LinkedHashMap<String, Integer> ranking = new LinkedHashMap<>();
 
 	protected void setup() {
-		state = State.s0CalculatePlayersPerMatch;
-
+		gameMatrix = new String[parameters.matrixSize][parameters.matrixSize];
 		myGui = new GUI(this);
 		System.setOut(new PrintStream(myGui.getLoggingOutputStream()));
 		myGui.leftPanelExtraInformation.setText(parameters.toString());
@@ -73,6 +72,7 @@ public class MainAgent extends Agent {
 	}
 
 	public int newGame() {
+		state = State.s0CalculatePlayersPerMatch;
 		addBehaviour(new Init());
 		addBehaviour(new GameManager());
 		return 0;
@@ -101,11 +101,11 @@ public class MainAgent extends Agent {
 
 	private class GameManager extends SimpleBehaviour {
 
-		int playerA;
-		int playerB;
+		int playerAId;
+		int playerBId;
 		int currentMatch;
 		LinkedHashMap<Integer, String> playersPerMatch = new LinkedHashMap<>();
-		boolean end = false;
+		boolean done = false;
 
 		public void action() {
 			switch (state) {
@@ -138,23 +138,23 @@ public class MainAgent extends Agent {
 				if (currentMatch > playersPerMatch.size()) {
 					state = State.s4End;
 				} else {
-					playerA = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[0]);
-					playerB = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[1]);
+					playerAId = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[0]);
+					playerBId = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[1]);
 
-					for (int i = 0; i < 2; i++) {
-						myGui.logLine("Sending new game message to player " + i);
-						ACLMessage newGame = new ACLMessage(ACLMessage.INFORM);
-						newGame.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-						newGame.setContent("NewGame#" + playerA + "," + playerB);
-						myAgent.send(newGame);
-					}
+					myGui.logLine("Sending new game messages");
+					ACLMessage newGame = new ACLMessage(ACLMessage.INFORM);
+					newGame.addReceiver(players[playerAId]);
+					newGame.addReceiver(players[playerBId]);
+					newGame.setContent("NewGame#" + playerAId + "," + playerBId);
+					myAgent.send(newGame);
 
 					state = State.s2Play;
 				}
 				break;
 
 			case s2Play:
-				myGui.logLine("Player " + players[playerA].getLocalName() + " vs " + players[playerB].getLocalName());
+				myGui.logLine(
+						"Player " + players[playerAId].getLocalName() + " vs " + players[playerBId].getLocalName());
 				int row = 0;
 				int column = 0;
 				int playedRounds = 1;
@@ -192,14 +192,15 @@ public class MainAgent extends Agent {
 						}
 
 					}
-					for (int i = 0; i < 2; i++) {
-						ACLMessage result = new ACLMessage(ACLMessage.INFORM);
-						result.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-						result.setContent("Results#" + row + "," + column + "#" + gameMatrix[row][column]);
-						myAgent.send(result);
-					}
+
+					ACLMessage result = new ACLMessage(ACLMessage.INFORM);
+					result.addReceiver(players[playerAId]);
+					result.addReceiver(players[playerBId]);
+					result.setContent("Results#" + row + "," + column + "#" + gameMatrix[row][column]);
+					myAgent.send(result);
+
 					myGui.logLine("Result: " + row + "," + column + "#" + gameMatrix[row][column]);
-					updateRanking(row, column, playerA, playerB);
+					updateRanking(row, column, playerAId, playerBId);
 					playedRounds++;
 //					doWait(1000);
 				}
@@ -207,12 +208,12 @@ public class MainAgent extends Agent {
 				break;
 
 			case s3SendEndGameMessages:
-				for (int i = 0; i < 2; i++) {
-					ACLMessage end = new ACLMessage(ACLMessage.INFORM);
-					end.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-					end.setContent("EndGame");
-					myAgent.send(end);
-				}
+				ACLMessage end = new ACLMessage(ACLMessage.INFORM);
+				end.addReceiver(players[playerAId]);
+				end.addReceiver(players[playerBId]);
+				end.setContent("EndGame");
+				myAgent.send(end);
+
 				currentMatch++;
 				state = State.s1SendNewGameMessages;
 				break;
@@ -224,13 +225,13 @@ public class MainAgent extends Agent {
 				for (String key : keys) {
 					myGui.logLine("Player: " + key + " - " + ranking.get(key));
 				}
-				end = true;
+				done = true;
 				break;
 			}
 		}
 
 		public boolean done() {
-			return end;
+			return done;
 		}
 	}
 
@@ -246,16 +247,7 @@ public class MainAgent extends Agent {
 				}
 			}
 		}
-		updateTable();
-	}
-
-	private void updateTable() {
-		for (int i = 0; i < parameters.matrixSize; i++) {
-			for (int j = 0; j < parameters.matrixSize; j++) {
-				myGui.data[i][j] = gameMatrix[i][j];
-			}
-		}
-		myGui.payoffTable.repaint();
+		myGui.setMatrixUI(gameMatrix);
 	}
 
 	/*************************************
@@ -313,7 +305,7 @@ public class MainAgent extends Agent {
 				percentageChanged += 2 * percentageByPosition;
 			}
 		}
-		updateTable();
+		myGui.setMatrixUI(gameMatrix);
 		return percentageChanged;
 	}
 

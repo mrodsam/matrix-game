@@ -30,6 +30,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
 
 @SuppressWarnings("serial")
 public final class GUI extends JFrame implements ActionListener {
@@ -39,13 +40,11 @@ public final class GUI extends JFrame implements ActionListener {
 	JLabel leftPanelRankingLabel2;
 	JList<String> playersList;
 	JList<String> rankingList;
-	JTable payoffTable;
+	private JTable payoffTable;
 	private MainAgent mainAgent;
 	private JPanel rightPanel;
 	private JTextArea rightPanelLoggingTextArea;
 	private LoggingOutputStream loggingOutputStream;
-
-	Object[][] data;
 
 	public GUI() {
 		initUI();
@@ -90,6 +89,19 @@ public final class GUI extends JFrame implements ActionListener {
 			listModel.addElement(key + " - " + value);
 		}
 		rankingList.setModel(listModel);
+	}
+
+	public void setMatrixUI(String[][] gameMatrix) {
+		Object[] nullPointerWorkAround = new Object[mainAgent.parameters.matrixSize];
+		for (int i = 0; i < mainAgent.parameters.matrixSize; i++) {
+			nullPointerWorkAround[i] = "*";
+		}
+		DefaultTableModel tableModel = new DefaultTableModel(nullPointerWorkAround, 0);
+		for (int i = 0; i < gameMatrix.length; i++) {
+			tableModel.addRow(gameMatrix[i]);
+		}
+
+		payoffTable.setModel(tableModel);
 	}
 
 	public void initUI() {
@@ -139,7 +151,7 @@ public final class GUI extends JFrame implements ActionListener {
 		leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
 		/**
 		 * ESTO HAY QUE VER COMO FUNCIONA, PORQUE REINICIA LAS RONDAS Y FIJO QUE ESTÁ
-		 * SUMANDO MAL EL RANKING
+		 * SUMANDO MAL EL RANKING Confirmamos, está sumando mal
 		 **/
 		/****************************************************************************/
 		JButton leftPanelStopButton = new JButton("Stop");
@@ -249,10 +261,14 @@ public final class GUI extends JFrame implements ActionListener {
 			nullPointerWorkAround[i] = "*";
 		}
 
-		data = new Object[mainAgent.parameters.matrixSize][mainAgent.parameters.matrixSize];
-
 		JLabel payoffLabel = new JLabel("Payoff matrix");
-		payoffTable = new JTable(data, nullPointerWorkAround);
+
+		DefaultTableModel tableModel = new DefaultTableModel(nullPointerWorkAround, 0);
+		for (int i = 0; i < mainAgent.gameMatrix.length; i++) {
+			tableModel.addRow(mainAgent.gameMatrix[i]);
+		}
+
+		payoffTable = new JTable(tableModel);
 		payoffTable.setTableHeader(null);
 		payoffTable.setEnabled(false);
 
