@@ -225,6 +225,7 @@ public class MainAgent extends Agent {
 				for (String key : keys) {
 					myGui.logLine("Player: " + key + " - " + ranking.get(key));
 				}
+				ranking.clear();
 				done = true;
 				break;
 			}
