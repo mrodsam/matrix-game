@@ -42,7 +42,6 @@ public class RandomPlayer extends Agent {
 		} catch (FIPAException e) {
 			e.printStackTrace();
 		}
-		System.out.println("RandomPlayer " + getAID().getName() + " terminating.");
 	}
 
 	private enum State {
