@@ -149,15 +149,12 @@ public final class GUI extends JFrame implements ActionListener {
 		leftPanelRoundsLabel = new JLabel("Match 0 - Round 0 / " + mainAgent.parameters.rounds);
 		JButton leftPanelNewButton = new JButton("New");
 		leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
-		/**
-		 * ESTO HAY QUE VER COMO FUNCIONA, PORQUE REINICIA LAS RONDAS Y FIJO QUE ESTÁ
-		 * SUMANDO MAL EL RANKING Confirmamos, está sumando mal
-		 **/
+		
 		/****************************************************************************/
-		JButton leftPanelStopButton = new JButton("Stop");
-		leftPanelStopButton.addActionListener(actionEvent -> mainAgent.doSuspend());
-		JButton leftPanelContinueButton = new JButton("Continue");
-		leftPanelContinueButton.addActionListener(actionEvent -> mainAgent.doActivate());
+//		JButton leftPanelStopButton = new JButton("Stop");
+//		leftPanelStopButton.addActionListener(actionEvent -> );
+//		JButton leftPanelContinueButton = new JButton("Continue");
+//		leftPanelContinueButton.addActionListener(actionEvent -> );
 		/****************************************************************************/
 
 		leftPanelExtraInformation = new JLabel("Parameters - ");
@@ -181,9 +178,9 @@ public final class GUI extends JFrame implements ActionListener {
 		gc.gridy = 1;
 		leftPanel.add(leftPanelNewButton, gc);
 		gc.gridy = 2;
-		leftPanel.add(leftPanelStopButton, gc);
+//		leftPanel.add(leftPanelStopButton, gc);
 		gc.gridy = 3;
-		leftPanel.add(leftPanelContinueButton, gc);
+//		leftPanel.add(leftPanelContinueButton, gc);
 		gc.gridy = 4;
 		leftPanel.add(leftPanelExtraInformation, gc);
 		gc.gridy = 5;
@@ -323,12 +320,10 @@ public final class GUI extends JFrame implements ActionListener {
 		menuBar.add(menuFile);
 
 		JMenu menuEdit = new JMenu("Edit");
-		/************************ IMPLEMENTAR ESTO ***************************/
 		JMenuItem resetPlayerEditMenu = new JMenuItem("Reset Players");
 		resetPlayerEditMenu.setToolTipText("Reset all player");
 		resetPlayerEditMenu.setActionCommand("reset_players");
-		resetPlayerEditMenu.addActionListener(this);
-		/***********************************************************/
+		resetPlayerEditMenu.addActionListener(actionEvent -> mainAgent.findPlayers());
 
 		JMenuItem parametersEditMenu = new JMenuItem("Parameters");
 		parametersEditMenu.setToolTipText("Modify the parameters of the game");
@@ -346,13 +341,13 @@ public final class GUI extends JFrame implements ActionListener {
 		newRunMenu.addActionListener(actionEvent -> mainAgent.newGame());
 
 		/********************** IGUAL QUE LOS BOTONES **********************/
-		JMenuItem stopRunMenu = new JMenuItem("Stop");
-		stopRunMenu.setToolTipText("Stops the execution of the current round");
-		stopRunMenu.addActionListener(actionEvent -> mainAgent.doSuspend());
-
-		JMenuItem continueRunMenu = new JMenuItem("Continue");
-		continueRunMenu.setToolTipText("Resume the execution");
-		continueRunMenu.addActionListener(actionEvent -> mainAgent.doActivate());
+//		JMenuItem stopRunMenu = new JMenuItem("Stop");
+//		stopRunMenu.setToolTipText("Stops the execution of the current round");
+//		stopRunMenu.addActionListener(actionEvent -> );
+//
+//		JMenuItem continueRunMenu = new JMenuItem("Continue");
+//		continueRunMenu.setToolTipText("Resume the execution");
+//		continueRunMenu.addActionListener(actionEvent -> );
 		/****************************************************************/
 
 		JMenuItem roundNumberRunMenu = new JMenuItem("Number Of rounds");
@@ -361,8 +356,8 @@ public final class GUI extends JFrame implements ActionListener {
 				.setRounds(JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?")));
 
 		menuRun.add(newRunMenu);
-		menuRun.add(stopRunMenu);
-		menuRun.add(continueRunMenu);
+//		menuRun.add(stopRunMenu);
+//		menuRun.add(continueRunMenu);
 		menuRun.add(roundNumberRunMenu);
 		menuBar.add(menuRun);
 
