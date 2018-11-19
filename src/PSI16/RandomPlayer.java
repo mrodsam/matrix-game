@@ -53,6 +53,7 @@ public class RandomPlayer extends Agent {
 		public void action() {
 			msg = blockingReceive();
 			if (msg != null) {
+				System.out.println("Recibido mensaje: "+msg.getContent()+"en "+myAgent.getAID().getLocalName());
 				switch (state) {
 				case s0ReceiveLeagueInfo:
 					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {
@@ -72,13 +73,12 @@ public class RandomPlayer extends Agent {
 							state = State.s2SelectPosition;
 						}
 					}
-
 					break;
 				case s2SelectPosition:
 					if (msg.getContent().startsWith("Position") && msg.getPerformative() == ACLMessage.REQUEST) {
 						ACLMessage positionReply = msg.createReply();
 						positionReply.setPerformative(ACLMessage.INFORM);
-						positionReply.setContent("Position#" + (int) (Math.random() * matrixSize));
+						positionReply.setContent("Position#" + (int) (Math.random() * (matrixSize - 1)));
 						myAgent.send(positionReply);
 						state = State.s3ReceiveRoundResult;
 					}
