@@ -65,8 +65,16 @@ public class FixedPlayer extends Agent {
 					break;
 
 				case s1ReceiveGameInfo:
-					if (msg.getContent().startsWith("NewGame#") && msg.getPerformative() == ACLMessage.INFORM) {
-						state = State.s2SelectPosition;
+					if (msg.getPerformative() == ACLMessage.INFORM) {
+						if (msg.getContent().startsWith("Id#")) {
+							String output[] = msg.getContent().split("#")[2].split(",");
+							matrixSize = Integer.parseInt(output[1]);
+							fixedPosition = (int) (Math.random() * matrixSize);
+							state = State.s1ReceiveGameInfo;
+						} else if (msg.getContent().startsWith("NewGame#")) {
+							state = State.s2SelectPosition;
+						}
+
 					}
 					break;
 				case s2SelectPosition:
