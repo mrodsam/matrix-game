@@ -1,5 +1,7 @@
 package PSI16;
 
+import java.util.Random;
+
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -20,7 +22,6 @@ public class RandomPlayer extends Agent {
 
 		DFAgentDescription dfad = new DFAgentDescription();
 		dfad.setName(getAID());
-
 		ServiceDescription sd = new ServiceDescription();
 		sd.setType("Player");
 		sd.setName("Game");
@@ -33,7 +34,6 @@ public class RandomPlayer extends Agent {
 		}
 
 		addBehaviour(new Game());
-
 	}
 
 	protected void takeDown() {
@@ -49,11 +49,13 @@ public class RandomPlayer extends Agent {
 	}
 
 	private class Game extends CyclicBehaviour {
+		Random r = new Random(100);
 
 		public void action() {
 			msg = blockingReceive();
+
 			if (msg != null) {
-				System.out.println("Recibido mensaje: "+msg.getContent()+"en "+myAgent.getAID().getLocalName());
+
 				switch (state) {
 				case s0ReceiveLeagueInfo:
 					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {
@@ -78,7 +80,7 @@ public class RandomPlayer extends Agent {
 					if (msg.getContent().startsWith("Position") && msg.getPerformative() == ACLMessage.REQUEST) {
 						ACLMessage positionReply = msg.createReply();
 						positionReply.setPerformative(ACLMessage.INFORM);
-						positionReply.setContent("Position#" + (int) (Math.random() * (matrixSize - 1)));
+						positionReply.setContent("Position#" + r.nextInt(matrixSize));
 						myAgent.send(positionReply);
 						state = State.s3ReceiveRoundResult;
 					}
@@ -87,16 +89,12 @@ public class RandomPlayer extends Agent {
 					if (msg.getContent().startsWith("EndGame") && msg.getPerformative() == ACLMessage.INFORM) {
 						state = State.s1ReceiveGameInfo;
 						break;
-					}
-
-					if (msg.getContent().startsWith("Results#") && msg.getPerformative() == ACLMessage.INFORM) {
+					} else if (msg.getContent().startsWith("Results#") && msg.getPerformative() == ACLMessage.INFORM) {
 						state = State.s2SelectPosition;
 					}
 					break;
 				}
 			}
-
 		}
-
 	}
 }

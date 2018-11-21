@@ -1,5 +1,7 @@
 package PSI16;
 
+import java.util.Random;
+
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -21,7 +23,6 @@ public class FixedPlayer extends Agent {
 
 		DFAgentDescription dfad = new DFAgentDescription();
 		dfad.setName(getAID());
-
 		ServiceDescription sd = new ServiceDescription();
 		sd.setType("Player");
 		sd.setName("Game");
@@ -34,7 +35,6 @@ public class FixedPlayer extends Agent {
 		}
 
 		addBehaviour(new Game());
-
 	}
 
 	protected void takeDown() {
@@ -50,16 +50,19 @@ public class FixedPlayer extends Agent {
 	}
 
 	private class Game extends CyclicBehaviour {
+		Random r = new Random(100);
 
 		public void action() {
 			msg = blockingReceive();
+
 			if (msg != null) {
+
 				switch (state) {
 				case s0ReceiveLeagueInfo:
 					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {
 						String output[] = msg.getContent().split("#")[2].split(",");
 						matrixSize = Integer.parseInt(output[1]);
-						fixedPosition = (int) (Math.random() * matrixSize);
+						fixedPosition = r.nextInt(matrixSize);
 						state = State.s1ReceiveGameInfo;
 					}
 					break;
@@ -69,12 +72,11 @@ public class FixedPlayer extends Agent {
 						if (msg.getContent().startsWith("Id#")) {
 							String output[] = msg.getContent().split("#")[2].split(",");
 							matrixSize = Integer.parseInt(output[1]);
-							fixedPosition = (int) (Math.random() * matrixSize);
+							fixedPosition = r.nextInt(matrixSize);
 							state = State.s1ReceiveGameInfo;
 						} else if (msg.getContent().startsWith("NewGame#")) {
 							state = State.s2SelectPosition;
 						}
-
 					}
 					break;
 				case s2SelectPosition:
@@ -90,17 +92,12 @@ public class FixedPlayer extends Agent {
 					if (msg.getContent().startsWith("EndGame") && msg.getPerformative() == ACLMessage.INFORM) {
 						state = State.s1ReceiveGameInfo;
 						break;
-					}
-
-					if (msg.getContent().startsWith("Results#") && msg.getPerformative() == ACLMessage.INFORM) {
+					} else if (msg.getContent().startsWith("Results#") && msg.getPerformative() == ACLMessage.INFORM) {
 						state = State.s2SelectPosition;
 					}
 					break;
 				}
 			}
-
 		}
-
 	}
-
 }
