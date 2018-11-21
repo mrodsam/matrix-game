@@ -3,6 +3,7 @@ package PSI16;
 import java.io.PrintStream;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.Set;
 
 import jade.core.AID;
@@ -134,7 +135,7 @@ public class MainAgent extends Agent {
 							match++;
 						}
 					}
-				}
+				}				
 				state = State.s1SendNewGameMessages;
 				break;
 
@@ -242,11 +243,12 @@ public class MainAgent extends Agent {
 	}
 
 	private void createMatrix() {
+		Random r = new Random(100);
 		gameMatrix = new String[parameters.matrixSize][parameters.matrixSize];
 		for (int i = 0; i < parameters.matrixSize; i++) {
 			for (int j = 0; j < parameters.matrixSize; j++) {
-				int a = (int) (Math.random() * 9);
-				int b = (int) (Math.random() * 9);
+				int a = r.nextInt(10);
+				int b = r.nextInt(10);
 				gameMatrix[i][j] = a + "," + b;
 				if (i != j) {
 					gameMatrix[j][i] = b + "," + a;
@@ -261,7 +263,6 @@ public class MainAgent extends Agent {
 			}
 			System.out.println();
 		}
-
 	}
 
 	/*************************************
@@ -359,9 +360,9 @@ public class MainAgent extends Agent {
 		int percentageToBeChanged;
 
 		public GameParameters() {
-			totalPlayers = 4;
-			matrixSize = 4;
-			rounds = 5;
+			totalPlayers = 2;
+			matrixSize = 3;
+			rounds = 10;
 			roundsBeforeChange = 0;
 			percentageToBeChanged = 0;
 		}
