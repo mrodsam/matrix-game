@@ -1,7 +1,5 @@
 package PSI16;
 
-import java.util.Random;
-
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -49,7 +47,6 @@ public class RandomPlayer extends Agent {
 	}
 
 	private class Game extends CyclicBehaviour {
-		Random r = new Random(100);
 
 		public void action() {
 			msg = blockingReceive();
@@ -80,7 +77,7 @@ public class RandomPlayer extends Agent {
 					if (msg.getContent().startsWith("Position") && msg.getPerformative() == ACLMessage.REQUEST) {
 						ACLMessage positionReply = msg.createReply();
 						positionReply.setPerformative(ACLMessage.INFORM);
-						positionReply.setContent("Position#" + r.nextInt(matrixSize));
+						positionReply.setContent("Position#" + (int) (Math.random() * matrixSize));
 						myAgent.send(positionReply);
 						state = State.s3ReceiveRoundResult;
 					}
