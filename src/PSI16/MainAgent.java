@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.Random;
 import java.util.Set;
 
 import jade.core.AID;
@@ -30,8 +29,6 @@ public class MainAgent extends Agent {
 
 	public String gameMatrix[][];
 	private LinkedHashMap<String, Integer> ranking = new LinkedHashMap<>();
-
-	private Random r = new Random(1000);
 
 	protected void setup() {
 
@@ -151,11 +148,11 @@ public class MainAgent extends Agent {
 				break;
 
 			case s1SendNewGameMessages:
-				System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
-						+ "Match " + currentMatch);
 				if (currentMatch > playersPerMatch.size()) {
 					state = State.s4End;
 				} else {
+					System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+							+ "] - " + "Match " + currentMatch);
 					playerAId = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[0]);
 					playerBId = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[1]);
 
@@ -182,13 +179,16 @@ public class MainAgent extends Agent {
 					myGui.leftPanelRoundsLabel
 							.setText("Match " + currentMatch + " - Round " + playedRounds + " / " + parameters.rounds);
 					myGui.leftPanelRoundsLabel.repaint();
-					if (parameters.roundsBeforeChange != 0 && playedRounds == parameters.roundsBeforeChange + 1) {
+					if (parameters.roundsBeforeChange != 0 && playedRounds % (parameters.roundsBeforeChange) == 0) {
 						int percentageChanged = updateMatrix();
 						for (int i = 0; i < 2; i++) {
-							ACLMessage end = new ACLMessage(ACLMessage.INFORM);
-							end.addReceiver(players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
-							end.setContent("Changed#" + percentageChanged);
-							myAgent.send(end);
+							ACLMessage change = new ACLMessage(ACLMessage.INFORM);
+							change.addReceiver(
+									players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
+							change.setContent("Changed#" + percentageChanged);
+							myAgent.send(change);
+							System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+									+ "] - " + change.getContent());
 						}
 					}
 					for (int i = 0; i < 2; i++) {
@@ -264,8 +264,8 @@ public class MainAgent extends Agent {
 		gameMatrix = new String[parameters.matrixSize][parameters.matrixSize];
 		for (int i = 0; i < parameters.matrixSize; i++) {
 			for (int j = 0; j < parameters.matrixSize; j++) {
-				int a = r.nextInt(10);
-				int b = r.nextInt(10);
+				int a = (int) (Math.random() * 10);
+				int b = (int) (Math.random() * 10);
 				gameMatrix[i][j] = a + "," + b;
 				if (i != j) {
 					gameMatrix[j][i] = b + "," + a;
@@ -274,12 +274,12 @@ public class MainAgent extends Agent {
 		}
 		myGui.setMatrixUI(gameMatrix);
 
-		for (int i = 0; i < gameMatrix.length; i++) {
-			for (int j = 0; j < gameMatrix.length; j++) {
-				System.out.print(gameMatrix[i][j] + "\t");
-			}
-			System.out.println();
-		}
+//		for (int i = 0; i < gameMatrix.length; i++) {
+//			for (int j = 0; j < gameMatrix.length; j++) {
+//				System.out.print(gameMatrix[i][j] + "\t");
+//			}
+//			System.out.println();
+//		}
 	}
 
 	/*************************************
@@ -382,9 +382,9 @@ public class MainAgent extends Agent {
 		int percentageToBeChanged;
 
 		public GameParameters() {
-			totalPlayers = 2;
-			matrixSize = 4;
-			rounds = 50;
+			totalPlayers = 5;
+			matrixSize = 10;
+			rounds = 400;
 			roundsBeforeChange = 0;
 			percentageToBeChanged = 0;
 		}
