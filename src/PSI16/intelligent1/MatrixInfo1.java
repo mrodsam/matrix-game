@@ -1,4 +1,4 @@
-package PSI16;
+package PSI16.intelligent1;
 
 import java.util.LinkedHashMap;
 
@@ -201,13 +201,16 @@ public class MatrixInfo1 {
 									- myMatrix.get(lastMinValue.getColumnRow()).getOpponentValueWithMyMinValue();
 							int currentDif = myMatrix.get(key).getMinValue()
 									- myMatrix.get(key).getOpponentValueWithMyMinValue();
-							if(currentDif < lastDif) {
+							/*
+							 * Si hay más diferencia entre los valores que ya tenía que entre los nuevos,
+							 * escojo los nuevos
+							 */
+							if (currentDif < lastDif) {
 								position = key;
 							}
-						}else {
+						} else {
 							position = key;
 						}
-						
 						lastMinValue = myMatrix.get(key);
 					}
 				}
@@ -216,5 +219,4 @@ public class MatrixInfo1 {
 
 		return position;
 	}
-
 }

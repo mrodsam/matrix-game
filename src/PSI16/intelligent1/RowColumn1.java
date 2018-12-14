@@ -1,4 +1,4 @@
-package PSI16;
+package PSI16.intelligent1;
 
 public class RowColumn1 {
 	private int columnRow;

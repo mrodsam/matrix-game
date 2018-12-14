@@ -1,4 +1,4 @@
-package PSI16;
+package PSI16.intelligent1;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -203,7 +203,6 @@ public class Intelligent1 extends Agent {
 			percentageChanged = Integer.parseInt(contentSplit[1]);
 
 			/* Reiniciar matrices */
-
 			if (percentageChanged > 30) {
 				gameMatrix = new String[matrixSize][matrixSize];
 				matrixInfo = new MatrixInfo1(gameMatrix, matrixSize, first, roundsBeforeChange);
@@ -245,9 +244,7 @@ public class Intelligent1 extends Agent {
 				opponentMove = row;
 				position = matrixInfo.getPosition(column, roundsCounter, fixedOpponent, opponentMove);
 			}
-
 			return true;
 		}
-
 	}
 }

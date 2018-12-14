@@ -382,11 +382,11 @@ public class MainAgent extends Agent {
 		int percentageToBeChanged;
 
 		public GameParameters() {
-			totalPlayers = 5;
+			totalPlayers = 7;
 			matrixSize = 10;
 			rounds = 400;
-			roundsBeforeChange = 0;
-			percentageToBeChanged = 0;
+			roundsBeforeChange = 130;
+			percentageToBeChanged = 70;
 		}
 
 		public GameParameters(int totalPlayers, int matrixSize, int rounds, int roundsBeforeChange,
