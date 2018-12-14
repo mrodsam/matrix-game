@@ -100,16 +100,16 @@ public class MatrixInfo1 {
 			}
 		}
 
-//		for (int i = 0; i < gameMatrix.length; i++) {
-//			for (int j = 0; j < gameMatrix.length; j++) {
-//				System.out.print(gameMatrix[i][j] + "\t");
-//			}
-//			System.out.println();
-//		}
+		for (int i = 0; i < gameMatrix.length; i++) {
+			for (int j = 0; j < gameMatrix.length; j++) {
+				System.out.print(gameMatrix[i][j] + "\t");
+			}
+			System.out.println();
+		}
 
-//		for (Integer key : myMatrix.keySet()) {
-//			System.out.println(myMatrix.get(key));
-//		}
+		for (Integer key : myMatrix.keySet()) {
+			System.out.println(myMatrix.get(key));
+		}
 
 	}
 
@@ -120,6 +120,12 @@ public class MatrixInfo1 {
 
 		/* Juego aleatoriamente las 5 primeras rondas */
 		if (roundsCounter < 5) {
+			boolean newRowColumn = false;
+			while (!newRowColumn) {
+				position = (int) Math.floor(Math.random() * matrixSize);
+				if (myMatrix.get(position).getKnownPercentage() == 0)
+					newRowColumn = true;
+			}
 			return position;
 		} else {
 			/*
@@ -205,10 +211,12 @@ public class MatrixInfo1 {
 							 * Si hay más diferencia entre los valores que ya tenía que entre los nuevos,
 							 * escojo los nuevos
 							 */
-							if (currentDif < lastDif) {
+							if (currentDif > lastDif) {
+								System.out.println("ESCOJO " + key + " porque " + currentDif + ">" + lastDif);
 								position = key;
 							}
 						} else {
+							System.out.println("ESCOJO " + key + " porque es el mayor");
 							position = key;
 						}
 						lastMinValue = myMatrix.get(key);
@@ -217,6 +225,7 @@ public class MatrixInfo1 {
 			}
 		}
 
+		System.out.println("Winner: " + position);
 		return position;
 	}
 }
