@@ -71,7 +71,6 @@ public class Intelligent1 extends Agent {
 					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {
 						if (validateInfoMessage(msg)) {
 							state = State.s1ReceiveGameInfo;
-							position = 0;
 						} else {
 							System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 									+ "] - Info message not valid");
@@ -94,7 +93,7 @@ public class Intelligent1 extends Agent {
 								if (myId < opponentId)
 									first = true;
 								roundsCounter = 0;
-								position = 0;
+								position = (int) (Math.random()*matrixSize);
 								state = State.s2SelectPosition;
 							} else {
 								System.out.println(
