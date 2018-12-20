@@ -46,6 +46,7 @@ public class Intelligent1 extends Agent {
 		}
 
 		addBehaviour(new Game());
+		System.out.println("Intelligent-1 " + getAID().getLocalName() + " is ready.");
 	}
 
 	protected void takeDown() {
@@ -54,6 +55,7 @@ public class Intelligent1 extends Agent {
 		} catch (FIPAException e) {
 			e.printStackTrace();
 		}
+		System.out.println("Intelligent-1 " + getAID().getLocalName() + " terminating.");
 	}
 
 	private enum State {
@@ -73,7 +75,7 @@ public class Intelligent1 extends Agent {
 							state = State.s1ReceiveGameInfo;
 						} else {
 							System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-									+ "] - Info message not valid");
+									+ "] - Info message not valid - " + getLocalName());
 						}
 					}
 					break;
@@ -85,20 +87,21 @@ public class Intelligent1 extends Agent {
 							} else {
 								System.out.println(
 										"[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-												+ "] - Info message not valid");
+												+ "] - Info message not valid - " + getLocalName());
 							}
 						} else if (msg.getContent().startsWith("NewGame#")) {
 							if (validateNewGameMessage(msg)) {
 								fixedOpponent = true;
 								if (myId < opponentId)
 									first = true;
+								matrixInfo = new MatrixInfo1(gameMatrix, matrixSize, first, roundsBeforeChange);
 								roundsCounter = 0;
-								position = (int) (Math.random()*matrixSize);
+								position = (int) (Math.random() * matrixSize);
 								state = State.s2SelectPosition;
 							} else {
 								System.out.println(
 										"[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-												+ "] - New game message not valid");
+												+ "] - New game message not valid - " + getLocalName());
 							}
 						}
 					}
@@ -107,9 +110,7 @@ public class Intelligent1 extends Agent {
 					if (msg.getContent().startsWith("Position") && msg.getPerformative() == ACLMessage.REQUEST) {
 						ACLMessage positionReply = msg.createReply();
 						positionReply.setPerformative(ACLMessage.INFORM);
-						/*****************************************/
 						positionReply.setContent("Position#" + position);
-						/*****************************************/
 						myAgent.send(positionReply);
 						roundsCounter++;
 						state = State.s3ReceiveRoundResult;
@@ -118,7 +119,7 @@ public class Intelligent1 extends Agent {
 							state = State.s2SelectPosition;
 						} else {
 							System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-									+ "] - Changed message not valid");
+									+ "] - Changed message not valid - " + getLocalName());
 						}
 
 					} else if (msg.getContent().startsWith("EndGame") && msg.getPerformative() == ACLMessage.INFORM) {
@@ -133,7 +134,6 @@ public class Intelligent1 extends Agent {
 						state = State.s2SelectPosition;
 					}
 					break;
-
 				}
 			}
 		}
@@ -177,9 +177,7 @@ public class Intelligent1 extends Agent {
 			if (idSplit.length != 2)
 				return false;
 
-			/* Iniciar matrices */
 			gameMatrix = new String[matrixSize][matrixSize];
-			matrixInfo = new MatrixInfo1(gameMatrix, matrixSize, first, roundsBeforeChange);
 
 			if (myId == Integer.parseInt(idSplit[0])) {
 				opponentId = Integer.parseInt(idSplit[1]);
@@ -201,7 +199,7 @@ public class Intelligent1 extends Agent {
 
 			percentageChanged = Integer.parseInt(contentSplit[1]);
 
-			/* Reiniciar matrices */
+			/* Reiniciar matrices si el porcentaje que ha cambiado es mayor que 30 */
 			if (percentageChanged > 30) {
 				gameMatrix = new String[matrixSize][matrixSize];
 				matrixInfo = new MatrixInfo1(gameMatrix, matrixSize, first, roundsBeforeChange);
@@ -233,12 +231,16 @@ public class Intelligent1 extends Agent {
 			if (first) {
 				if (opponentMove != -1 && opponentMove != column) {
 					fixedOpponent = false;
+				} else if (opponentMove == column) {
+					fixedOpponent = true;
 				}
 				opponentMove = column;
 				position = matrixInfo.getPosition(row, roundsCounter, fixedOpponent, opponentMove);
 			} else {
 				if (opponentMove != -1 && opponentMove != row) {
 					fixedOpponent = false;
+				} else if (opponentMove == row) {
+					fixedOpponent = true;
 				}
 				opponentMove = row;
 				position = matrixInfo.getPosition(column, roundsCounter, fixedOpponent, opponentMove);

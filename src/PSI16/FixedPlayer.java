@@ -33,6 +33,7 @@ public class FixedPlayer extends Agent {
 		}
 
 		addBehaviour(new Game());
+		System.out.println("FixedPLayer " + getAID().getLocalName() + " is ready.");
 	}
 
 	protected void takeDown() {
@@ -41,6 +42,7 @@ public class FixedPlayer extends Agent {
 		} catch (FIPAException e) {
 			e.printStackTrace();
 		}
+		System.out.println("FixedPLayer " + getAID().getLocalName() + " terminating.");
 	}
 
 	private enum State {
@@ -50,8 +52,8 @@ public class FixedPlayer extends Agent {
 	private class Game extends CyclicBehaviour {
 
 		public void action() {
-			msg = blockingReceive();
 
+			msg = blockingReceive();
 			if (msg != null) {
 
 				switch (state) {
@@ -59,7 +61,7 @@ public class FixedPlayer extends Agent {
 					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {
 						String output[] = msg.getContent().split("#")[2].split(",");
 						matrixSize = Integer.parseInt(output[1]);
-						fixedPosition = (int) (Math.random()*matrixSize);
+						fixedPosition = (int) (Math.random() * matrixSize);
 						state = State.s1ReceiveGameInfo;
 					}
 					break;
@@ -69,7 +71,6 @@ public class FixedPlayer extends Agent {
 						if (msg.getContent().startsWith("Id#")) {
 							String output[] = msg.getContent().split("#")[2].split(",");
 							matrixSize = Integer.parseInt(output[1]);
-//							fixedPosition = (int) Math.random()*matrixSize;;
 							state = State.s1ReceiveGameInfo;
 						} else if (msg.getContent().startsWith("NewGame#")) {
 							state = State.s2SelectPosition;

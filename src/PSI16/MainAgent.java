@@ -21,12 +21,9 @@ import jade.lang.acl.ACLMessage;
 public class MainAgent extends Agent {
 
 	private GUI myGui;
-
 	private State state;
-
 	private AID[] players;
 	public GameParameters parameters = new GameParameters();
-
 	public String gameMatrix[][];
 	private LinkedHashMap<String, Integer> ranking = new LinkedHashMap<>();
 
@@ -38,12 +35,12 @@ public class MainAgent extends Agent {
 		myGui.leftPanelExtraInformation.setText(parameters.toString());
 
 		findPlayers();
-		System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + "Agent "
+		System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + "Agent "
 				+ getAID().getName() + " is ready.");
 	}
 
-	protected int findPlayers() {
-		System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+	protected void findPlayers() {
+		System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 				+ "Updating player list");
 
 		DFAgentDescription template = new DFAgentDescription();
@@ -53,7 +50,7 @@ public class MainAgent extends Agent {
 		try {
 			DFAgentDescription[] result = DFService.search(this, template);
 			if (result.length > 0) {
-				System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+				System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 						+ "Found " + result.length + " players");
 			}
 			if (result.length < parameters.totalPlayers)
@@ -74,10 +71,9 @@ public class MainAgent extends Agent {
 			playerNames[i] = players[i].getName();
 		}
 		myGui.setPlayersUI(playerNames);
-		return 0;
 	}
 
-	public int newGame() {
+	public void newGame() {
 		state = State.s0CalculatePlayersPerMatch;
 		gameMatrix = new String[parameters.matrixSize][parameters.matrixSize];
 		createMatrix();
@@ -85,10 +81,9 @@ public class MainAgent extends Agent {
 			addBehaviour(new Init());
 			addBehaviour(new GameManager());
 		} else {
-			System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+			System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 					+ "Insufficient number of players");
 		}
-		return 0;
 	}
 
 	private enum State {
@@ -105,7 +100,7 @@ public class MainAgent extends Agent {
 				ACLMessage info = new ACLMessage(ACLMessage.INFORM);
 				info.addReceiver(players[i]);
 				info.setContent(infoContent);
-				System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+				System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 						+ "Information about the game: " + infoContent);
 				myAgent.send(info);
 			}
@@ -151,12 +146,12 @@ public class MainAgent extends Agent {
 				if (currentMatch > playersPerMatch.size()) {
 					state = State.s4End;
 				} else {
-					System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+					System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 							+ "] - " + "Match " + currentMatch);
 					playerAId = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[0]);
 					playerBId = Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[1]);
 
-					System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+					System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 							+ "] - " + "Sending new game messages");
 					ACLMessage newGame = new ACLMessage(ACLMessage.INFORM);
 					newGame.addReceiver(players[playerAId]);
@@ -169,8 +164,8 @@ public class MainAgent extends Agent {
 				break;
 
 			case s2Play:
-				System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
-						+ "Player " + players[playerAId].getLocalName() + " vs " + players[playerBId].getLocalName());
+				System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+						+ players[playerAId].getLocalName() + " vs " + players[playerBId].getLocalName());
 				int row = 0;
 				int column = 0;
 				int playedRounds = 1;
@@ -187,7 +182,7 @@ public class MainAgent extends Agent {
 									players[Integer.parseInt(playersPerMatch.get(currentMatch).split("-")[i])]);
 							change.setContent("Changed#" + percentageChanged);
 							myAgent.send(change);
-							System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+							System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 									+ "] - " + change.getContent());
 						}
 					}
@@ -198,10 +193,10 @@ public class MainAgent extends Agent {
 						position.setContent("Position");
 						myAgent.send(position);
 
-						System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+						System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 								+ "] - " + "Main Waiting for movement");
 						ACLMessage response = myAgent.blockingReceive();
-						System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+						System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 								+ "] - " + "Main received " + response.getContent() + " from "
 								+ response.getSender().getLocalName());
 						if (i == 0) {
@@ -209,7 +204,6 @@ public class MainAgent extends Agent {
 						} else if (i == 1) {
 							column = Integer.parseInt(response.getContent().split("#")[1]);
 						}
-
 					}
 
 					ACLMessage result = new ACLMessage(ACLMessage.INFORM);
@@ -218,11 +212,10 @@ public class MainAgent extends Agent {
 					result.setContent("Results#" + row + "," + column + "#" + gameMatrix[row][column]);
 					myAgent.send(result);
 
-					System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+					System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 							+ "] - " + "Result: " + row + "," + column + "#" + gameMatrix[row][column]);
 					updateRanking(row, column, playerAId, playerBId);
 					playedRounds++;
-//					doWait(1000);
 				}
 				state = State.s3SendEndGameMessages;
 				break;
@@ -239,14 +232,14 @@ public class MainAgent extends Agent {
 				break;
 
 			case s4End:
-				System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+				System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 						+ "End game");
 				Set<String> keys = ranking.keySet();
-				System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+				System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 						+ "Ranking:");
 				for (String key : keys) {
-					System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-							+ "] - " + "Player: " + key + " - " + ranking.get(key));
+					System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+							+ "] - " + key + " - " + ranking.get(key));
 				}
 				ranking.clear();
 				done = true;
@@ -273,18 +266,7 @@ public class MainAgent extends Agent {
 			}
 		}
 		myGui.setMatrixUI(gameMatrix);
-
-//		for (int i = 0; i < gameMatrix.length; i++) {
-//			for (int j = 0; j < gameMatrix.length; j++) {
-//				System.out.print(gameMatrix[i][j] + "\t");
-//			}
-//			System.out.println();
-//		}
 	}
-
-	/*************************************
-	 * ¿¿AQUÍ O EN LA UI??
-	 ***********************************************/
 
 	public void setParameters(String showInputDialog) {
 		if (showInputDialog != null) {
@@ -293,7 +275,7 @@ public class MainAgent extends Agent {
 					Integer.parseInt(showInputDialog.split(",")[3]), Integer.parseInt(showInputDialog.split(",")[4]));
 
 			myGui.leftPanelExtraInformation.setText(parameters.toString());
-			System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+			System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 					+ "Parameters: " + parameters.toString());
 		}
 	}
@@ -303,16 +285,15 @@ public class MainAgent extends Agent {
 			parameters.rounds = Integer.parseInt(numberOfRounds);
 			myGui.leftPanelRoundsLabel.setText("Match 0 - Round 0 / " + parameters.rounds);
 			myGui.leftPanelExtraInformation.setText(parameters.toString());
-			System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+			System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 					+ "Rounds: " + numberOfRounds);
 		}
 
 	}
 
-	/*********************************************************************************************************/
 	private int updateMatrix() {
 		System.out.println(
-				'[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + "Update matrix");
+				"[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + "Update matrix");
 		int percentageChanged = 0;
 		int percentageByPosition = 100 / (parameters.matrixSize * parameters.matrixSize);
 		String matrix[][] = new String[parameters.matrixSize][parameters.matrixSize];
@@ -321,8 +302,8 @@ public class MainAgent extends Agent {
 			int row = (int) (Math.random() * parameters.matrixSize);
 			int column = (int) (Math.random() * parameters.matrixSize);
 
-			int a = (int) (Math.random() * 9);
-			int b = (int) (Math.random() * 9);
+			int a = (int) (Math.random() * 10);
+			int b = (int) (Math.random() * 10);
 
 			if (matrix[column][row] != null || matrix[row][column] != null) {
 				continue;
@@ -366,9 +347,9 @@ public class MainAgent extends Agent {
 
 		myGui.leftPanelRankingLabel1.setText(playerAName + ": " + ranking.get(playerAName));
 		myGui.leftPanelRankingLabel2.setText(playerBName + ": " + ranking.get(playerBName));
-		System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+		System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 				+ playerAName + ": " + ranking.get(playerAName));
-		System.out.println('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
+		System.out.println("[" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - "
 				+ playerBName + ": " + ranking.get(playerBName));
 
 		myGui.setRankingUI(ranking);
@@ -382,11 +363,11 @@ public class MainAgent extends Agent {
 		int percentageToBeChanged;
 
 		public GameParameters() {
-			totalPlayers = 7;
-			matrixSize = 10;
-			rounds = 400;
-			roundsBeforeChange = 130;
-			percentageToBeChanged = 70;
+			totalPlayers = 5;
+			matrixSize = 4;
+			rounds = 1000;
+			roundsBeforeChange = 0;
+			percentageToBeChanged = 0;
 		}
 
 		public GameParameters(int totalPlayers, int matrixSize, int rounds, int roundsBeforeChange,
@@ -400,8 +381,8 @@ public class MainAgent extends Agent {
 
 		@Override
 		public String toString() {
-			return "Parameters [N=" + totalPlayers + ", S=" + matrixSize + ", R=" + rounds + ", I=" + roundsBeforeChange
-					+ ", P=" + percentageToBeChanged + "]";
+			return "N=" + totalPlayers + ", S=" + matrixSize + ", R=" + rounds + ", I=" + roundsBeforeChange + ", P="
+					+ percentageToBeChanged;
 		}
 
 	}

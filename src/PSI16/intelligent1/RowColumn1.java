@@ -6,13 +6,15 @@ public class RowColumn1 {
 	private double knownPercentage;
 	private int minValue;
 	private int opponentValueWithMyMinValue;
+	private boolean first;
 
-	public RowColumn1(int lastPosition) {
-		columnRow = lastPosition;
+	public RowColumn1(int position, boolean first) {
+		columnRow = position;
 		movements = 0;
 		knownPercentage = 0;
 		minValue = 10;
 		opponentValueWithMyMinValue = 10;
+		this.first = first;
 	}
 
 	public RowColumn1() {
@@ -70,7 +72,7 @@ public class RowColumn1 {
 	public String toString() {
 		return "RowColumn1 [columnRow=" + columnRow + ", movements=" + movements + ", knownPercentage="
 				+ knownPercentage + ", minValue=" + minValue + ", opponentValueWithMyMinValue="
-				+ opponentValueWithMyMinValue + "]";
+				+ opponentValueWithMyMinValue + ", first=" + first + "]";
 	}
 
 }

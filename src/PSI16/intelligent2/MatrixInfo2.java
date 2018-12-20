@@ -1,28 +1,26 @@
-package PSI16.intelligent1;
+package PSI16.intelligent2;
 
 import java.util.LinkedHashMap;
 
-public class MatrixInfo1 {
+public class MatrixInfo2 {
 
 	private String gameMatrix[][];
 	private int matrixSize;
 	private boolean first;
-	private LinkedHashMap<Integer, RowColumn1> myMatrix;
+	private LinkedHashMap<Integer, RowColumn2> myMatrix;
 	boolean allKnown = false;
 	int roundsBeforeChange;
-	double p;
 
-	public MatrixInfo1(String[][] gameMatrix, int matrixsize, boolean first, int roundsBeforeChange) {
+	public MatrixInfo2(String[][] gameMatrix, int matrixsize, boolean first, int roundsBeforeChange) {
 		this.gameMatrix = gameMatrix;
 		this.matrixSize = matrixsize;
 		this.first = first;
 		this.roundsBeforeChange = roundsBeforeChange;
 		allKnown = false;
-		p = 0.2;
 
 		myMatrix = new LinkedHashMap<>();
 		for (int i = 0; i < matrixSize; i++) {
-			myMatrix.put(i, new RowColumn1(i, first));
+			myMatrix.put(i, new RowColumn2(i));
 		}
 
 	}
@@ -35,31 +33,23 @@ public class MatrixInfo1 {
 
 		/* Update movements counter */
 		myMatrix.get(lastPosition).setMovements(myMatrix.get(lastPosition).getMovements() + 1);
-
 		if (first) {
+
 			/*
-			 * Update min score and opponent score with your min score for each row
+			 * Update the sum of payoffs for each row
 			 */
+
 			for (int i = 0; i < gameMatrix.length; i++) {
+				int myTotalSum = 0;
+				int opponentTotalSum = 0;
 				for (int j = 0; j < gameMatrix.length; j++) {
 					if (gameMatrix[i][j] != null) {
-						if (Integer.parseInt(gameMatrix[i][j].split(",")[0]) <= myMatrix.get(i).getMinValue()) {
-							if (Integer.parseInt(gameMatrix[i][j].split(",")[0]) == myMatrix.get(i).getMinValue()) {
-								if (Integer.parseInt(gameMatrix[i][j].split(",")[1]) < myMatrix.get(i)
-										.getOpponentValueWithMyMinValue()) {
-									myMatrix.get(i).setMinValue(Integer.parseInt(gameMatrix[i][j].split(",")[0]));
-									myMatrix.get(i).setOpponentValueWithMyMinValue(
-											Integer.parseInt(gameMatrix[i][j].split(",")[1]));
-								}
-
-							} else {
-								myMatrix.get(i).setMinValue(Integer.parseInt(gameMatrix[i][j].split(",")[0]));
-								myMatrix.get(i).setOpponentValueWithMyMinValue(
-										Integer.parseInt(gameMatrix[i][j].split(",")[1]));
-							}
-						}
+						myTotalSum += Integer.parseInt(gameMatrix[i][j].split(",")[0]);
+						opponentTotalSum += Integer.parseInt(gameMatrix[i][j].split(",")[1]);
 					}
 				}
+				myMatrix.get(i).setTotalSum(myTotalSum);
+				myMatrix.get(i).setOpponentTotalSum(opponentTotalSum);
 			}
 
 			/* Update known percentage for each row */
@@ -71,31 +61,25 @@ public class MatrixInfo1 {
 					}
 					myMatrix.get(i).setKnownPercentage((percentage / (double) matrixSize) * Double.valueOf(100));
 				}
+
 			}
+
 		} else {
 
 			/*
-			 * Update min score and opponent score with your min score for every column
+			 * Update the sum of payoffs for each row
 			 */
 			for (int i = 0; i < gameMatrix.length; i++) {
+				int myTotalSum = 0;
+				int opponentTotalSum = 0;
 				for (int j = 0; j < gameMatrix.length; j++) {
-					if (gameMatrix[i][j] != null) {
-						if (Integer.parseInt(gameMatrix[i][j].split(",")[1]) <= myMatrix.get(j).getMinValue()) {
-							if (Integer.parseInt(gameMatrix[i][j].split(",")[1]) == myMatrix.get(j).getMinValue()) {
-								if (Integer.parseInt(gameMatrix[i][j].split(",")[0]) < myMatrix.get(j)
-										.getOpponentValueWithMyMinValue()) {
-									myMatrix.get(j).setMinValue(Integer.parseInt(gameMatrix[i][j].split(",")[1]));
-									myMatrix.get(j).setOpponentValueWithMyMinValue(
-											Integer.parseInt(gameMatrix[i][j].split(",")[0]));
-								}
-							} else {
-								myMatrix.get(j).setMinValue(Integer.parseInt(gameMatrix[i][j].split(",")[1]));
-								myMatrix.get(j).setOpponentValueWithMyMinValue(
-										Integer.parseInt(gameMatrix[i][j].split(",")[0]));
-							}
-						}
+					if (gameMatrix[j][i] != null) {
+						myTotalSum += Integer.parseInt(gameMatrix[j][i].split(",")[1]);
+						opponentTotalSum += Integer.parseInt(gameMatrix[j][i].split(",")[0]);
 					}
 				}
+				myMatrix.get(i).setTotalSum(myTotalSum);
+				myMatrix.get(i).setOpponentTotalSum(opponentTotalSum);
 			}
 
 			/* Update known percentage for every column */
@@ -112,13 +96,13 @@ public class MatrixInfo1 {
 
 		for (int i = 0; i < gameMatrix.length; i++) {
 			for (int j = 0; j < gameMatrix.length; j++) {
-				//System.out.print(gameMatrix[i][j] + "\t");
+				// System.out.print(gameMatrix[i][j] + "\t");
 			}
-			//System.out.println();
+			// System.out.println();
 		}
 
 		for (Integer key : myMatrix.keySet()) {
-			//System.out.println(myMatrix.get(key));
+			// System.out.println(myMatrix.get(key));
 		}
 
 	}
@@ -139,7 +123,6 @@ public class MatrixInfo1 {
 			while (init) {
 				position = (int) Math.floor(Math.random() * matrixSize);
 				if (myMatrix.get(position).getKnownPercentage() == 0) {
-					//System.out.println("Escojo " + position + " porque <5 rounds y no conozco nada");
 					break;
 				}
 			}
@@ -153,7 +136,6 @@ public class MatrixInfo1 {
 				if (!allKnown) {
 					for (Integer key : myMatrix.keySet()) {
 						if (myMatrix.get(key).getMovements() == 0) {
-							//System.out.println("Escojo " + key + " porque no la escogí nunca");
 							return key;
 						}
 					}
@@ -161,78 +143,61 @@ public class MatrixInfo1 {
 				}
 
 				return fixedOpponentStrategy(opponentMove, position);
+
 			} else {
 				/*
 				 * To keep learning: probability of choosing randomly p = 0.2
 				 */
-				if (Math.random() < p) {
-					//System.out.println("Escojo RANDOM");
+				if (Math.random() < 0.2) {
 					return (int) (Math.random() * matrixSize);
 				} else {
-					return minMaxStrategy(position);
+					return maxSumStrategy(position);
 				}
 			}
+
 		}
 	}
 
-	private int minMaxStrategy(int position) {
-		//System.out.println("Estrategia min-max");
-		RowColumn1 lastMinValue = new RowColumn1();
+	private int maxSumStrategy(int position) {
+		RowColumn2 lastMaxSumValue = new RowColumn2();
 		for (Integer key : myMatrix.keySet()) {
 			/*
-			 * Choose the row/column with max value in the worst case (min-max strategy)
-			 */
-			if (myMatrix.get(key).getMinValue() >= lastMinValue.getMinValue()) {
-				if (myMatrix.get(key).getMinValue() == lastMinValue.getMinValue()) {
-					if (lastMinValue.getOpponentValueWithMyMinValue() > myMatrix.get(key)
-							.getOpponentValueWithMyMinValue()) {
+			 * Choose the row/column with the higher sum of payoffs
+			 * */
+			if (myMatrix.get(key).getTotalSum() >= lastMaxSumValue.getTotalSum()) {
+				if (myMatrix.get(key).getTotalSum() == lastMaxSumValue.getTotalSum()) {
+					if (myMatrix.get(key).getOpponentTotalSum() < lastMaxSumValue.getOpponentTotalSum()) {
 						position = key;
-						lastMinValue = myMatrix.get(key);
+						lastMaxSumValue = myMatrix.get(key);
 					}
 				} else {
 					position = key;
-					lastMinValue = myMatrix.get(key);
+					lastMaxSumValue = myMatrix.get(key);
 				}
 			}
 		}
-		//System.out.println("Escojo " + position);
 		return position;
 	}
 
 	private int fixedOpponentStrategy(int opponentMove, int position) {
-		//System.out.println("Estrategia oponente fijo, su movimiento " + opponentMove);
-		int lastValue = -1;
+		int lastValue = 0;
 		int lastPos = -1;
 		if (first) {
 			for (int i = 0; i < gameMatrix.length; i++) {
-				if (gameMatrix[i][opponentMove] == null) {
-					position = i;
-					break;
-				}
 				if (gameMatrix[i][opponentMove] != null
 						&& Integer.parseInt(gameMatrix[i][opponentMove].split(",")[0]) >= lastValue) {
 					/*
 					 * If two equal max values, choose the worst for my opponent
 					 */
-
-					if (lastPos != -1 && Integer.parseInt(gameMatrix[i][opponentMove].split(",")[0]) == lastValue) {
-						//System.out.println("SON IGUALES");
+					if (lastPos != -1 && Integer.parseInt(gameMatrix[opponentMove][i].split(",")[0]) == lastValue) {
 
 						if (Integer.parseInt(gameMatrix[lastPos][opponentMove].split(",")[1]) > Integer
 								.parseInt(gameMatrix[i][opponentMove].split(",")[1])) {
-							//System.out.println("Escojo " + i + " porque "
-//									+ Integer.parseInt(gameMatrix[i][opponentMove].split(",")[0]) + "es igual que "
-//									+ lastValue + " pero " + Integer.parseInt(gameMatrix[i][opponentMove].split(",")[1])
-//									+ "es menor que "
-//									+ Integer.parseInt(gameMatrix[lastPos][opponentMove].split(",")[1]));
 							position = i;
-							lastValue = Integer.parseInt(gameMatrix[i][opponentMove].split(",")[0]);
+							lastValue = Integer.parseInt(gameMatrix[opponentMove][i].split(",")[0]);
 							lastPos = i;
 						}
 					} else {
-						//System.out.println(
-//								"Escojo " + i + " porque " + Integer.parseInt(gameMatrix[i][opponentMove].split(",")[0])
-//										+ "es mayor que " + lastValue);
 						position = i;
 						lastValue = Integer.parseInt(gameMatrix[i][opponentMove].split(",")[0]);
 						lastPos = i;
@@ -241,10 +206,6 @@ public class MatrixInfo1 {
 			}
 		} else {
 			for (int i = 0; i < gameMatrix.length; i++) {
-				if (gameMatrix[opponentMove][i] == null) {
-					position = i;
-					break;
-				}
 				if (gameMatrix[opponentMove][i] != null
 						&& Integer.parseInt(gameMatrix[opponentMove][i].split(",")[1]) >= lastValue) {
 					if (lastPos != -1 && Integer.parseInt(gameMatrix[opponentMove][i].split(",")[1]) == lastValue) {
@@ -262,7 +223,6 @@ public class MatrixInfo1 {
 				}
 			}
 		}
-		//System.out.println("Escojo " + position);
 		return position;
 	}
 }

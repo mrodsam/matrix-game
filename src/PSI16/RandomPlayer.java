@@ -8,7 +8,6 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 
-@SuppressWarnings("serial")
 public class RandomPlayer extends Agent {
 
 	private int matrixSize;
@@ -32,6 +31,7 @@ public class RandomPlayer extends Agent {
 		}
 
 		addBehaviour(new Game());
+		System.out.println("RandomPLayer " + getAID().getLocalName() + " is ready.");
 	}
 
 	protected void takeDown() {
@@ -40,6 +40,7 @@ public class RandomPlayer extends Agent {
 		} catch (FIPAException e) {
 			e.printStackTrace();
 		}
+		System.out.println("RandomPlayer " + getAID().getLocalName() + " terminating.");
 	}
 
 	private enum State {
@@ -49,10 +50,10 @@ public class RandomPlayer extends Agent {
 	private class Game extends CyclicBehaviour {
 
 		public void action() {
+
 			msg = blockingReceive();
-
 			if (msg != null) {
-
+				
 				switch (state) {
 				case s0ReceiveLeagueInfo:
 					if (msg.getContent().startsWith("Id#") && msg.getPerformative() == ACLMessage.INFORM) {

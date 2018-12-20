@@ -34,6 +34,7 @@ import javax.swing.table.DefaultTableModel;
 
 @SuppressWarnings("serial")
 public final class GUI extends JFrame implements ActionListener {
+	
 	JLabel leftPanelRoundsLabel;
 	JLabel leftPanelExtraInformation;
 	JLabel leftPanelRankingLabel1;
@@ -149,13 +150,6 @@ public final class GUI extends JFrame implements ActionListener {
 		leftPanelRoundsLabel = new JLabel("Match 0 - Round 0 / " + mainAgent.parameters.rounds);
 		JButton leftPanelNewButton = new JButton("New");
 		leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
-		
-		/****************************************************************************/
-//		JButton leftPanelStopButton = new JButton("Stop");
-//		leftPanelStopButton.addActionListener(actionEvent -> );
-//		JButton leftPanelContinueButton = new JButton("Continue");
-//		leftPanelContinueButton.addActionListener(actionEvent -> );
-		/****************************************************************************/
 
 		leftPanelExtraInformation = new JLabel("Parameters - ");
 		leftPanelRankingLabel1 = new JLabel("PlayerA - Payoffs");
@@ -177,10 +171,6 @@ public final class GUI extends JFrame implements ActionListener {
 
 		gc.gridy = 1;
 		leftPanel.add(leftPanelNewButton, gc);
-		gc.gridy = 2;
-//		leftPanel.add(leftPanelStopButton, gc);
-		gc.gridy = 3;
-//		leftPanel.add(leftPanelContinueButton, gc);
 		gc.gridy = 4;
 		leftPanel.add(leftPanelExtraInformation, gc);
 		gc.gridy = 5;
@@ -340,24 +330,12 @@ public final class GUI extends JFrame implements ActionListener {
 		newRunMenu.setToolTipText("Starts a new series of games");
 		newRunMenu.addActionListener(actionEvent -> mainAgent.newGame());
 
-		/********************** IGUAL QUE LOS BOTONES **********************/
-//		JMenuItem stopRunMenu = new JMenuItem("Stop");
-//		stopRunMenu.setToolTipText("Stops the execution of the current round");
-//		stopRunMenu.addActionListener(actionEvent -> );
-//
-//		JMenuItem continueRunMenu = new JMenuItem("Continue");
-//		continueRunMenu.setToolTipText("Resume the execution");
-//		continueRunMenu.addActionListener(actionEvent -> );
-		/****************************************************************/
-
 		JMenuItem roundNumberRunMenu = new JMenuItem("Number Of rounds");
 		roundNumberRunMenu.setToolTipText("Change the number of rounds");
 		roundNumberRunMenu.addActionListener(actionEvent -> mainAgent
 				.setRounds(JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?")));
 
 		menuRun.add(newRunMenu);
-//		menuRun.add(stopRunMenu);
-//		menuRun.add(continueRunMenu);
 		menuRun.add(roundNumberRunMenu);
 		menuBar.add(menuRun);
 
